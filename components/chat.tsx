@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -7,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { ChatHeader } from "@/components/chat-header";
+import { Greeting } from "./greeting";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -194,38 +196,78 @@ export function Chat({
           selectedVisibilityType={initialVisibilityType}
         />
 
-        <Messages
-          addToolApprovalResponse={addToolApprovalResponse}
-          chatId={id}
-          isArtifactVisible={isArtifactVisible}
-          isReadonly={isReadonly}
-          messages={messages}
-          regenerate={regenerate}
-          selectedModelId={initialChatModel}
-          setMessages={setMessages}
-          status={status}
-          votes={votes}
-        />
+        <AnimatePresence mode="wait">
+          {messages.length === 0 ? (
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-1 flex-col items-center justify-center p-4"
+              exit={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: 20 }}
+              key="empty"
+            >
+              <div className="w-full max-w-3xl space-y-8">
+                <Greeting />
+                {!isReadonly && (
+                  <MultimodalInput
+                    attachments={attachments}
+                    chatId={id}
+                    input={input}
+                    messages={messages}
+                    onModelChange={setCurrentModelId}
+                    selectedModelId={currentModelId}
+                    selectedVisibilityType={visibilityType}
+                    sendMessage={sendMessage}
+                    setAttachments={setAttachments}
+                    setInput={setInput}
+                    setMessages={setMessages}
+                    status={status}
+                    stop={stop}
+                  />
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              animate={{ opacity: 1 }}
+              className="flex flex-1 flex-col overflow-hidden"
+              initial={{ opacity: 0 }}
+              key="chat-content"
+            >
+              <Messages
+                addToolApprovalResponse={addToolApprovalResponse}
+                chatId={id}
+                isArtifactVisible={isArtifactVisible}
+                isReadonly={isReadonly}
+                messages={messages}
+                regenerate={regenerate}
+                selectedModelId={initialChatModel}
+                setMessages={setMessages}
+                status={status}
+                votes={votes}
+              />
 
-        <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
-          {!isReadonly && (
-            <MultimodalInput
-              attachments={attachments}
-              chatId={id}
-              input={input}
-              messages={messages}
-              onModelChange={setCurrentModelId}
-              selectedModelId={currentModelId}
-              selectedVisibilityType={visibilityType}
-              sendMessage={sendMessage}
-              setAttachments={setAttachments}
-              setInput={setInput}
-              setMessages={setMessages}
-              status={status}
-              stop={stop}
-            />
+              <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
+                {!isReadonly && (
+                  <MultimodalInput
+                    attachments={attachments}
+                    chatId={id}
+                    input={input}
+                    messages={messages}
+                    onModelChange={setCurrentModelId}
+                    selectedModelId={currentModelId}
+                    selectedVisibilityType={visibilityType}
+                    sendMessage={sendMessage}
+                    setAttachments={setAttachments}
+                    setInput={setInput}
+                    setMessages={setMessages}
+                    status={status}
+                    stop={stop}
+                  />
+                )}
+              </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
 
       <Artifact

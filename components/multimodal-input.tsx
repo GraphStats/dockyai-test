@@ -2,6 +2,7 @@
 
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
+import { motion } from "framer-motion";
 import equal from "fast-deep-equal";
 import { CheckIcon } from "lucide-react";
 import {
@@ -296,17 +297,11 @@ function PureMultimodalInput({
   }, [handlePaste]);
 
   return (
-    <div className={cn("relative flex w-full flex-col gap-4", className)}>
-      {messages.length === 0 &&
-        attachments.length === 0 &&
-        uploadQueue.length === 0 && (
-          <SuggestedActions
-            chatId={chatId}
-            selectedVisibilityType={selectedVisibilityType}
-            sendMessage={sendMessage}
-          />
-        )}
-
+    <motion.div
+      layout
+      layoutId="multimodal-input"
+      className={cn("relative flex w-full flex-col gap-4", className)}
+    >
       <input
         className="pointer-events-none fixed -top-4 -left-4 size-0.5 opacity-0"
         multiple
@@ -404,7 +399,17 @@ function PureMultimodalInput({
           )}
         </PromptInputToolbar>
       </PromptInput>
-    </div>
+
+      {messages.length === 0 &&
+        attachments.length === 0 &&
+        uploadQueue.length === 0 && (
+          <SuggestedActions
+            chatId={chatId}
+            selectedVisibilityType={selectedVisibilityType}
+            sendMessage={sendMessage}
+          />
+        )}
+    </motion.div>
   );
 }
 
