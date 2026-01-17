@@ -12,67 +12,80 @@ export default async function SettingsPage() {
     redirect("/");
   }
 
-  const settings = await getUserSettings();
+  try {
+    const settings = await getUserSettings();
 
-  return (
-    <div className="container max-w-2xl py-10 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your AI preferences and privacy settings.
-        </p>
-      </div>
-
-      <form action={updateUserSettings} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>AI Personality</CardTitle>
-            <CardDescription>
-              Tell the AI how you want it to behave and what to call it.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="customInstructions">Custom Instructions</Label>
-              <Textarea
-                id="customInstructions"
-                name="customInstructions"
-                placeholder="Ex: Call me 'Commander'. Be very professional and formal."
-                defaultValue={settings?.customInstructions}
-                className="min-h-[150px]"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Privacy</CardTitle>
-            <CardDescription>
-              Control what information is shared with the AI.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="useLocation">Share Location</Label>
-              <p className="text-sm text-muted-foreground">
-                Allow the AI to see your city and country to give local information.
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              id="useLocation"
-              name="useLocation"
-              defaultChecked={settings?.useLocation}
-              className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
-            />
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end">
-          <Button type="submit">Save Settings</Button>
+    return (
+      <div className="container max-w-2xl py-10 space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          <p className="text-muted-foreground">
+            Manage your AI preferences and privacy settings.
+          </p>
         </div>
-      </form>
-    </div>
-  );
+
+        <form action={updateUserSettings} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Personality</CardTitle>
+              <CardDescription>
+                Tell the AI how you want it to behave and what to call it.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="customInstructions">Custom Instructions</Label>
+                <Textarea
+                  id="customInstructions"
+                  name="customInstructions"
+                  placeholder="Ex: Call me 'Commander'. Be very professional and formal."
+                  defaultValue={settings?.customInstructions}
+                  className="min-h-[150px]"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Privacy</CardTitle>
+              <CardDescription>
+                Control what information is shared with the AI.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="useLocation">Share Location</Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow the AI to see your city and country to give local information.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                id="useLocation"
+                name="useLocation"
+                defaultChecked={settings?.useLocation}
+                className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button type="submit">Save Settings</Button>
+          </div>
+        </form>
+      </div>
+    );
+  } catch (error) {
+    console.error("Settings Page Error:", error);
+    return (
+      <div className="container max-w-2xl py-10 space-y-8">
+        <h1 className="text-3xl font-bold text-red-500">Database connection error</h1>
+        <p>Your settings are temporarily unavailable because the database is updating. Please try again in 1 minute.</p>
+        <Button asChild variant="outline">
+          <a href="/">Back to Chat</a>
+        </Button>
+      </div>
+    );
+  }
 }
