@@ -43,6 +43,7 @@ export const updateDocument = ({ userId, dataStream }: UpdateDocumentProps) =>
         throw new Error(`No document handler found for kind: ${document.kind}`);
       }
 
+      await documentHandler.onUpdateDocument({
         document,
         description,
         dataStream,
