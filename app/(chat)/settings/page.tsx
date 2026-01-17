@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -34,6 +35,21 @@ export default function SettingsPage() {
         setLoading(false);
       });
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const customInstructions = formData.get("customInstructions") as string;
+    const useLocation = formData.get("useLocation") === "on";
+
+    try {
+      await updateUserSettings(formData);
+      setSettings({ customInstructions, useLocation });
+      toast("Settings saved successfully!");
+    } catch (err) {
+      toast("Failed to save settings. Please try again.");
+    }
+  };
 
   if (loading) {
     return (
@@ -91,7 +107,7 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <form action={updateUserSettings} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>AI Personality</CardTitle>
@@ -106,7 +122,8 @@ export default function SettingsPage() {
                 id="customInstructions"
                 name="customInstructions"
                 placeholder="Ex: Call me 'Commander'. Be very professional and formal."
-                defaultValue={settings.customInstructions}
+                value={settings.customInstructions}
+                onChange={(e) => setSettings({ ...settings, customInstructions: e.target.value })}
                 className="min-h-[150px]"
               />
             </div>
@@ -131,14 +148,15 @@ export default function SettingsPage() {
               type="checkbox"
               id="useLocation"
               name="useLocation"
-              defaultChecked={settings.useLocation}
+              checked={settings.useLocation}
+              onChange={(e) => setSettings({ ...settings, useLocation: e.target.checked })}
               className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
             />
           </CardContent>
         </Card>
 
         <div className="flex justify-end">
-          <SubmitButton />
+          <Button type="submit">Save Settings</Button>
         </div>
       </form>
     </div>

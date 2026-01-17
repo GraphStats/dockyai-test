@@ -9,7 +9,7 @@ import {
 } from "ai";
 import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream";
-import { auth, type UserType } from "@/app/(auth)/auth";
+import { auth } from "@clerk/nextjs/server";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
@@ -24,6 +24,7 @@ import {
   getChatById,
   getMessageCountByUserId,
   getMessagesByChatId,
+  getOrCreateUser,
   getUserById,
   saveChat,
   saveMessages,
@@ -63,13 +64,13 @@ export async function POST(request: Request) {
     const { id, message, messages, selectedChatModel, selectedVisibilityType } =
       requestBody;
 
-    const session = await auth();
+    const { userId } = await auth();
 
-    if (!session?.user) {
+    if (!userId) {
       return new ChatSDKError("unauthorized:chat").toResponse();
     }
 
-    const userType: UserType = session.user.type;
+    const userType: "regular" = "regular";
 
     if (!process.env.HUGGING_FACE_API_KEY) {
       return new ChatSDKError(
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
     }
 
     const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
+      id: userId,
       differenceInHours: 24,
     });
 
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
     let titlePromise: Promise<string> | null = null;
 
     if (chat) {
-      if (chat.userId !== session.user.id) {
+      if (chat.userId !== userId) {
         return new ChatSDKError("forbidden:chat").toResponse();
       }
       if (!isToolApprovalFlow) {
@@ -103,7 +104,7 @@ export async function POST(request: Request) {
     } else if (message?.role === "user") {
       await saveChat({
         id,
-        userId: session.user.id,
+        userId: userId,
         title: "New chat",
         visibility: selectedVisibilityType,
       });
@@ -150,10 +151,9 @@ export async function POST(request: Request) {
         console.log("Starting stream with model:", selectedChatModel);
         let userData = null;
         try {
-          const users = await getUserById(session.user.id);
-          userData = users[0];
+          userData = await getOrCreateUser(userId);
         } catch (dbError) {
-          console.error("Failed to fetch user settings, using defaults:", dbError);
+          console.error("Failed to fetch or create user, using defaults:", dbError);
         }
 
         try {
@@ -167,7 +167,12 @@ export async function POST(request: Request) {
             }),
             messages: modelMessages,
             stopWhen: stepCountIs(5),
-            experimental_activeTools: [],
+            experimental_activeTools: [
+              "getWeather",
+              "createDocument",
+              "updateDocument",
+              "requestSuggestions",
+            ],
             providerOptions: isReasoningModel
               ? {
                   anthropic: {
@@ -175,14 +180,19 @@ export async function POST(request: Request) {
                   },
                 }
               : undefined,
-            tools: {},
+            tools: {
+              getWeather,
+              createDocument: createDocument({ userId, dataStream }),
+              updateDocument: updateDocument({ userId, dataStream }),
+              requestSuggestions: requestSuggestions({ userId, dataStream }),
+            },
             experimental_telemetry: {
               isEnabled: isProductionEnvironment,
               functionId: "stream-text",
             },
           });
 
-        dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
+          dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
 
           if (titlePromise) {
             const title = await titlePromise;
@@ -285,15 +295,15 @@ export async function DELETE(request: Request) {
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
-  const session = await auth();
+  const { userId } = await auth();
 
-  if (!session?.user) {
+  if (!userId) {
     return new ChatSDKError("unauthorized:chat").toResponse();
   }
 
   const chat = await getChatById({ id });
 
-  if (chat?.userId !== session.user.id) {
+  if (chat?.userId !== userId) {
     return new ChatSDKError("forbidden:chat").toResponse();
   }
 

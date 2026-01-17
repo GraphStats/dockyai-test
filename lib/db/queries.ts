@@ -73,8 +73,35 @@ export async function getUserById(id: string): Promise<User[]> {
     return await db.select().from(user).where(eq(user.id, id));
   } catch (_error) {
     console.error("Database error in getUserById:", _error);
-    // Return empty array instead of throwing to avoid crashing callers
     return [];
+  }
+}
+
+export async function getOrCreateUser(id: string, email?: string): Promise<User> {
+  const users = await getUserById(id);
+  if (users.length > 0) {
+    return users[0];
+  }
+
+  try {
+    const db = getDb();
+    const [newUser] = await db.insert(user).values({
+      id,
+      email: email || `user-${id}`,
+      useLocation: true,
+      customInstructions: "",
+    }).returning();
+    return newUser;
+  } catch (error) {
+    console.error("Failed to create user on the fly:", error);
+    // Return a dummy user object if insertion fails
+    return {
+      id,
+      email: email || `user-${id}`,
+      customInstructions: "",
+      useLocation: true,
+      password: null,
+    } as User;
   }
 }
 

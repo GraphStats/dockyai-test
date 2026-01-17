@@ -3,8 +3,7 @@
 import { ChevronUp } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { User } from "next-auth";
-import { signOut, useSession } from "next-auth/react";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { useTheme } from "next-themes";
 import {
   DropdownMenu,
@@ -22,12 +21,31 @@ import { guestRegex } from "@/lib/constants";
 import { LoaderIcon } from "./icons";
 import { toast } from "./toast";
 
-export function SidebarUserNav({ user }: { user: User }) {
+export function SidebarUserNav() {
   const router = useRouter();
-  const { data, status } = useSession();
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
   const { setTheme, resolvedTheme } = useTheme();
 
-  const isGuest = guestRegex.test(data?.user?.email ?? "");
+  if (!isLoaded) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton className="h-10 justify-between bg-background">
+            <div className="flex flex-row gap-2">
+              <div className="size-6 animate-pulse rounded-full bg-zinc-500/30" />
+              <span className="animate-pulse rounded-md bg-zinc-500/30 text-transparent">
+                Loading...
+              </span>
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
+
+  // Simplified: no guests in Clerk for now, or you can handle it based on your Clerk setup
+  const isGuest = !user;
 
   return (
     <SidebarMenu>
@@ -52,14 +70,14 @@ export function SidebarUserNav({ user }: { user: User }) {
                 data-testid="user-nav-button"
               >
                 <Image
-                  alt={user.email ?? "User Avatar"}
+                  alt={user?.primaryEmailAddress?.emailAddress ?? "User Avatar"}
                   className="rounded-full"
                   height={24}
-                  src={`https://avatar.vercel.sh/${user.email}`}
+                  src={user?.imageUrl ?? `https://avatar.vercel.sh/${user?.primaryEmailAddress?.emailAddress}`}
                   width={24}
                 />
                 <span className="truncate" data-testid="user-email">
-                  {isGuest ? "Guest" : user?.email}
+                  {user?.primaryEmailAddress?.emailAddress ?? "Guest"}
                 </span>
                 <ChevronUp className="ml-auto" />
               </SidebarMenuButton>
@@ -90,22 +108,10 @@ export function SidebarUserNav({ user }: { user: User }) {
               <button
                 className="w-full cursor-pointer"
                 onClick={() => {
-                  if (status === "loading") {
-                    toast({
-                      type: "error",
-                      description:
-                        "Checking authentication status, please try again!",
-                    });
-
-                    return;
-                  }
-
                   if (isGuest) {
                     router.push("/login");
                   } else {
-                    signOut({
-                      redirectTo: "/",
-                    });
+                    signOut({ redirectUrl: "/" });
                   }
                 }}
                 type="button"

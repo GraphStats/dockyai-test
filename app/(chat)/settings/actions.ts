@@ -1,12 +1,12 @@
 "use server";
 
-import { auth } from "@/app/(auth)/auth";
-import { getUserById, updateUserById } from "@/lib/db/queries";
+import { auth } from "@clerk/nextjs/server";
+import { getOrCreateUser, updateUserById } from "@/lib/db/queries";
 import { revalidatePath } from "next/cache";
 
 export async function updateUserSettings(formData: FormData) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const { userId } = await auth();
+  if (!userId) {
     throw new Error("Unauthorized");
   }
 
@@ -14,7 +14,7 @@ export async function updateUserSettings(formData: FormData) {
     const customInstructions = formData.get("customInstructions") as string;
     const useLocation = formData.get("useLocation") === "on";
 
-    await updateUserById(session.user.id, {
+    await updateUserById(userId, {
       customInstructions,
       useLocation,
     });
@@ -27,8 +27,8 @@ export async function updateUserSettings(formData: FormData) {
 }
 
 export async function getUserSettings() {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const { userId } = await auth();
+  if (!userId) {
     return {
       customInstructions: "",
       useLocation: true,
@@ -36,8 +36,7 @@ export async function getUserSettings() {
   }
 
   try {
-    const users = await getUserById(session.user.id);
-    const user = users[0];
+    const user = await getOrCreateUser(userId);
 
     return {
       customInstructions: user?.customInstructions || "",
