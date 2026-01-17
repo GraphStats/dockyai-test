@@ -72,11 +72,9 @@ export async function getUserById(id: string): Promise<User[]> {
     const db = getDb();
     return await db.select().from(user).where(eq(user.id, id));
   } catch (_error) {
-    if (_error instanceof ChatSDKError) throw _error;
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to get user by id"
-    );
+    console.error("Database error in getUserById:", _error);
+    // Return empty array instead of throwing to avoid crashing callers
+    return [];
   }
 }
 
@@ -107,7 +105,12 @@ export async function createGuestUser() {
   try {
     const db = getDb();
     console.log("Creating guest user with email:", email);
-    return await db.insert(user).values({ email, password, useLocation: true }).returning({
+    return await db.insert(user).values({ 
+      email, 
+      password, 
+      useLocation: true,
+      customInstructions: "" 
+    }).returning({
       id: user.id,
       email: user.email,
     });
