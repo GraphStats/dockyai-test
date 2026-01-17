@@ -6,6 +6,10 @@ import {
 } from "ai";
 import { isTestEnvironment } from "../constants";
 
+if (!process.env.HUGGING_FACE_API_KEY) {
+  console.warn("HUGGING_FACE_API_KEY is missing from environment variables");
+}
+
 const huggingface = createHuggingFace({
   apiKey: process.env.HUGGING_FACE_API_KEY,
 });

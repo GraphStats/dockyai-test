@@ -139,10 +139,12 @@ export async function POST(request: Request) {
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
       execute: async ({ writer: dataStream }) => {
-        const result = streamText({
-          model: getLanguageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
-          messages: modelMessages,
+        console.log("Starting stream with model:", selectedChatModel);
+        try {
+          const result = streamText({
+            model: getLanguageModel(selectedChatModel),
+            system: systemPrompt({ selectedChatModel, requestHints }),
+            messages: modelMessages,
           stopWhen: stepCountIs(5),
           experimental_activeTools: isReasoningModel
             ? []
@@ -173,10 +175,14 @@ export async function POST(request: Request) {
 
         dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
 
-        if (titlePromise) {
-          const title = await titlePromise;
-          dataStream.write({ type: "data-chat-title", data: title });
-          updateChatTitleById({ chatId: id, title });
+          if (titlePromise) {
+            const title = await titlePromise;
+            dataStream.write({ type: "data-chat-title", data: title });
+            updateChatTitleById({ chatId: id, title });
+          }
+        } catch (err: any) {
+          console.error("Error during stream execution:", err);
+          dataStream.write({ type: "error", errorText: err.message || "Unknown error" });
         }
       },
       generateId: generateUUID,
