@@ -14,13 +14,7 @@ export const chatModels: ChatModel[] = [
     id: "meta-llama/Llama-3.1-8B-Instruct",
     name: "Llama 3.1 8B",
     provider: "meta",
-    description: "Meta's efficient 8B parameter model",
-  },
-  {
-    id: "meta-llama/Llama-3.1-70B-Instruct",
-    name: "Llama 3.1 70B",
-    provider: "meta",
-    description: "Highly capable model for complex tasks",
+    description: "Meta's most advanced 8B parameter model",
   },
   // Mistral
   {
@@ -29,24 +23,26 @@ export const chatModels: ChatModel[] = [
     provider: "mistral",
     description: "Mistral's popular small-footprint model",
   },
-  {
-    id: "mistralai/Mixtral-8x7B-Instruct-v0.1",
-    name: "Mixtral 8x7B",
-    provider: "mistral",
-    description: "High-quality sparse mixture-of-experts model",
-  },
   // Google
   {
     id: "google/gemma-2-9b-it",
     name: "Gemma 2 9B",
     provider: "google",
-    description: "Google's high-performance open model",
+    description: "Google's high-performance 9B model",
   },
+  // Qwen (Alibaba)
   {
-    id: "google/gemma-2-27b-it",
-    name: "Gemma 2 27B",
-    provider: "google",
-    description: "Powerful 27B parameter model from Google",
+    id: "Qwen/Qwen2.5-7B-Instruct",
+    name: "Qwen 2.5 7B",
+    provider: "alibaba",
+    description: "Alibaba's latest 7B performance model",
+  },
+  // NousResearch
+  {
+    id: "NousResearch/Hermes-3-Llama-3.1-8B",
+    name: "Hermes 3 Llama 3.1",
+    provider: "nous",
+    description: "Highly capable model fine-tuned for reasoning",
   },
   // Microsoft
   {
@@ -55,12 +51,12 @@ export const chatModels: ChatModel[] = [
     provider: "microsoft",
     description: "Lightweight and surprisingly capable",
   },
-  // Qwen
+  // Community
   {
-    id: "Qwen/Qwen2.5-72B-Instruct",
-    name: "Qwen 2.5 72B",
-    provider: "alibaba",
-    description: "Alibaba's most powerful open model",
+    id: "HuggingFaceH4/zephyr-7b-beta",
+    name: "Zephyr 7B Beta",
+    provider: "huggingface",
+    description: "Popular model for chat and instruction following",
   },
 ];
 
