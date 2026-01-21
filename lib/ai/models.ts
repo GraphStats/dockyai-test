@@ -21,6 +21,12 @@ export const chatModels: ChatModel[] = [
     provider: "alibaba",
     description: "The most powerful Qwen 2.5",
   },
+    {
+    id: "Qwen/Qwen3-Coder-30B-A3B-Instruct:fireworks-ai",
+    name: "Qwen 3 Coder 30B",
+    provider: "alibaba",
+    description: "Optimized for coding tasks",
+  },
   {
     id: "zai-org/GLM-4.7-Flash:novita",
     name: "GLM-4.7-Flash",
@@ -29,15 +35,9 @@ export const chatModels: ChatModel[] = [
   },
   {
     id: "zai-org/GLM-4.7:novita",
-    name: "GLM-4.7-Novita",
+    name: "GLM-4.7",
     provider: "zai",
     description: "Enhanced version of GLM-4.7",
-  },
-  {
-    id: "Qwen/Qwen3-Coder-30B-A3B-Instruct:fireworks-ai",
-    name: "Qwen 3 Coder 30B",
-    provider: "alibaba",
-    description: "Optimized for coding tasks",
   },
 ];
 

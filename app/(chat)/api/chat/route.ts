@@ -61,7 +61,12 @@ export async function POST(request: Request) {
   try {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);
-  } catch (_) {
+  } catch (error) {
+    console.error("Failed to parse or validate request body for /api/chat:", error);
+    // If it's a ZodError, we can extract more details
+    if (error instanceof z.ZodError) {
+        console.error("Zod validation errors:", error.errors);
+    }
     return new ChatSDKError("bad_request:api").toResponse();
   }
 

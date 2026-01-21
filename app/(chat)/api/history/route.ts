@@ -2,6 +2,9 @@ import type { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { deleteAllChatsByUserId, getChatsByUserId } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
+import { cookies } from "next/headers"; // Import cookies
+
+const GUEST_ID_COOKIE_NAME = "guest_user_id"; // Define guest cookie name, matching chat route
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -17,14 +20,25 @@ export async function GET(request: NextRequest) {
     ).toResponse();
   }
 
-  const { userId } = await auth();
+  const { userId: clerkUserId } = await auth(); // Rename to clerkUserId
+  let currentUserId: string | null = null;
 
-  if (!userId) {
+  if (clerkUserId) {
+    currentUserId = clerkUserId;
+  } else {
+    const cookieStore = cookies();
+    const guestIdFromCookie = cookieStore.get(GUEST_ID_COOKIE_NAME);
+    if (guestIdFromCookie) {
+      currentUserId = guestIdFromCookie.value;
+    }
+  }
+
+  if (!currentUserId) { // Check if we have any user ID
     return new ChatSDKError("unauthorized:chat").toResponse();
   }
 
   const chats = await getChatsByUserId({
-    id: userId,
+    id: currentUserId, // Use currentUserId
     limit,
     startingAfter,
     endingBefore,
