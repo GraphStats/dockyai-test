@@ -40,6 +40,7 @@ import { convertToUIMessages, generateUUID } from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
 import { checkMessageWithAI } from "@/lib/ai/moderation-ai"; // Import the AI moderation utility
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
+import { z } from "zod";
 
 export const maxDuration = 60;
 

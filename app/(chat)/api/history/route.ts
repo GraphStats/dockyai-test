@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   if (clerkUserId) {
     currentUserId = clerkUserId;
   } else {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const guestIdFromCookie = cookieStore.get(GUEST_ID_COOKIE_NAME);
     if (guestIdFromCookie) {
       currentUserId = guestIdFromCookie.value;

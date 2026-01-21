@@ -79,7 +79,7 @@ export default function RootLayout({
           enableSystem
         >
           <Toaster position="top-center" />
-          <ClerkProvider fallbackRedirectUrl="/chat" afterSignOutUrl="/">
+          <ClerkProvider signInFallbackRedirectUrl="/chat" afterSignOutUrl="/">
             {children}
           </ClerkProvider>
         </ThemeProvider>
