@@ -73,19 +73,21 @@ export async function POST(request: Request) {
 
     let currentUserId: string;
     let userType: UserType;
-    const cookieStore = await cookies(); // Await the cookies() function
+    const cookieStore = await cookies();
 
     if (clerkUserId) {
       currentUserId = clerkUserId;
       userType = "regular";
     } else {
-      let guestId = cookieStore.get(GUEST_ID_COOKIE_NAME)?.value;
+      const guestIdFromCookie = cookieStore.get(GUEST_ID_COOKIE_NAME);
+      let guestIdValue: string;
 
-      if (!guestId) {
-        // Create new guest user
-        const newGuest = await createGuestUser(); // Use the existing createGuestUser
-        guestId = newGuest[0].id; // Assuming createGuestUser returns an array with the new user object
-        cookieStore.set(GUEST_ID_COOKIE_NAME, guestId, {
+      if (guestIdFromCookie) {
+        guestIdValue = guestIdFromCookie.value;
+      } else {
+        const newGuest = await createGuestUser();
+        guestIdValue = newGuest[0].id;
+        cookieStore.set(GUEST_ID_COOKIE_NAME, guestIdValue, {
           httpOnly: true,
           secure: isProductionEnvironment,
           maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -93,7 +95,7 @@ export async function POST(request: Request) {
           sameSite: "lax",
         });
       }
-      currentUserId = guestId;
+      currentUserId = guestIdValue;
       userType = "guest";
     }
 
