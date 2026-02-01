@@ -89,9 +89,7 @@ Ce projet est open-source.
 
 ## ❤️ Crédits
 
-Développé par **Drayko**
-
-Pour [OpenDocky](https://github.com/OpenDocky)
+Développé par [Drayko](https://drayko.xyz), pour [OpenDocky](https://github.com/OpenDocky)
 
 Projet passion autour de l’IA et du web.
 
