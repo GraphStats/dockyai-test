@@ -145,11 +145,12 @@ function Dashboard() {
             throw new Error(err.message || "Le service Puter a rencontré une erreur.");
           }
         }
-        else if (currentModel?.provider === 'groq') {
+        else if (currentModel?.provider === 'groq' || currentModel?.provider === 'huggingface' || currentModel?.provider === 'openrouter') {
           const response = await fetch('/api/chat', {
             method: 'POST',
             body: JSON.stringify({ modelId, messages: updatedMessages }),
           });
+
 
           if (!response.ok) {
             const errData = await response.json();

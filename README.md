@@ -77,6 +77,7 @@ npm run dev
 ## 📌 Statut du projet
 
 🚧 **En développement actif**
+
 Des fonctionnalités et des modèles seront ajoutés progressivement.
 
 ---
