@@ -16,10 +16,10 @@ export const chatModels: ChatModel[] = [
     description: "Optimized for coding tasks",
   },
   {
-    id: "Qwen/Qwen2.5-72B-Instruct",
+    id: "Qwen/Qwen2.5-VL-72B-Instruct",
     name: "Qwen 2.5",
     provider: "Alibaba",
-    description: "The most powerful Qwen 2.5",
+    description: "Vision-language 72B model with image understanding.",
   },
   {
     id: "zai-org/GLM-4.7",
@@ -38,12 +38,6 @@ export const chatModels: ChatModel[] = [
     name: "Kimi K2",
     provider: "Moonshot",
     description: "Kimi K2 from Moonshot AI (Hugging Face responses endpoint).",
-  },
-  {
-    id: "Qwen/Qwen2.5-VL-72B-Instruct",
-    name: "Qwen 2.5 VL 72B",
-    provider: "Alibaba",
-    description: "Vision-language 72B model with image understanding.",
   },
 ];
 

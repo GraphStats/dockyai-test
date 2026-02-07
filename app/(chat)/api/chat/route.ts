@@ -23,7 +23,12 @@ import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { isProductionEnvironment } from "@/lib/constants";
-import { DEFAULT_CHAT_MODEL, supportsTools, chatModels } from "@/lib/ai/models";
+import {
+  DEFAULT_CHAT_MODEL,
+  supportsTools,
+  chatModels,
+  visionSupportedModelIds,
+} from "@/lib/ai/models";
 import {
   createStreamId,
   deleteChatById,
@@ -194,25 +199,6 @@ export async function POST(request: Request) {
 
     const uiMessagesWithFiles = await inlineFileData(uiMessages);
 
-    // If images are present but the model is not vision-capable, warn and strip them
-    const hasImages = uiMessagesWithFiles.some((m) =>
-      m.parts.some(
-        (p) => p.type === "file" && p.mediaType?.startsWith("image/")
-      )
-    );
-
-    if (hasImages && !visionSupportedModelIds.has(effectiveModelId)) {
-      // Notify user in-stream and drop images to avoid silent provider failure
-      const ui = createUIMessageStream({ originalMessages: uiMessagesWithFiles });
-      ui.write({
-        type: "data-textDelta",
-        data: `ℹ️ Le modèle "${effectiveModelId}" ne gère pas les images. Choisissez un modèle vision (par ex. Qwen2.5-VL) ou envoyez du texte.`,
-        transient: true,
-      });
-      ui.close();
-      return createUIMessageStreamResponse({ stream: ui });
-    }
-
     const { longitude, latitude, city, country } = geolocation(request);
 
     const requestHints: RequestHints = {
@@ -266,6 +252,28 @@ export async function POST(request: Request) {
 
     const effectiveModelId = selectedChatModel;
     const effectiveModelSupportsTools = supportsTools(effectiveModelId);
+
+    // Block images on non-vision models with a clear streaming message
+    const hasImages = uiMessagesWithFiles.some((m) =>
+      m.parts.some(
+        (p) => p.type === "file" && p.mediaType?.startsWith("image/")
+      )
+    );
+
+    if (hasImages && !visionSupportedModelIds.has(effectiveModelId)) {
+      const warningStream = createUIMessageStream({
+        originalMessages: uiMessagesWithFiles,
+        execute: async ({ writer }) => {
+          writer.write({
+            type: "data-textDelta",
+            data: `ℹ️ Le modèle "${effectiveModelId}" ne gère pas les images. Choisissez un modèle vision (par ex. Qwen/Qwen2.5-VL-72B-Instruct) ou envoyez uniquement du texte.`,
+            transient: true,
+          });
+        },
+        generateId: generateUUID,
+      });
+      return createUIMessageStreamResponse({ stream: warningStream });
+    }
 
     const modelMessages = await convertToModelMessages(uiMessagesWithFiles);
 
