@@ -253,6 +253,12 @@ export async function POST(request: Request) {
       ).toResponse();
     }
 
+    const hasImages = uiMessagesWithFiles.some((m) =>
+      m.parts.some(
+        (p) => p.type === "file" && p.mediaType?.startsWith("image/")
+      )
+    );
+
     // Determine model & capabilities
     let effectiveModelId =
       selectedChatModel === AUTO_MODEL_ID
@@ -263,11 +269,6 @@ export async function POST(request: Request) {
     let effectiveModelSupportsTools = supportsTools(effectiveModelId);
 
     // Block images on non-vision models; if a vision model is available, auto-switch with notice
-    const hasImages = uiMessagesWithFiles.some((m) =>
-      m.parts.some(
-        (p) => p.type === "file" && p.mediaType?.startsWith("image/")
-      )
-    );
 
     if (hasImages && !visionSupportedModelIds.has(effectiveModelId)) {
       const availableVision = Array.from(visionSupportedModelIds)[0];
