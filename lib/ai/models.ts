@@ -34,10 +34,10 @@ export const chatModels: ChatModel[] = [
     description: "A powerful multilingual model",
   },
   {
-    id: "mistralai/Devstral-2-123B-Instruct-2512",
-    name: "Devstral 2",
-    provider: "Mistral",
-    description: "Devstral is an agentic LLM for software engineering tasks.",
+    id: "moonshotai/Kimi-K2.5",
+    name: "Kimi K2.5",
+    provider: "Moonshot",
+    description: "Kimi K2.5, an open-source, native multimodal agentic model.",
   },
 ];
 
