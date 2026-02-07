@@ -23,7 +23,7 @@ import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { isProductionEnvironment } from "@/lib/constants";
-import { DEFAULT_CHAT_MODEL, supportsTools } from "@/lib/ai/models";
+import { DEFAULT_CHAT_MODEL, supportsTools, chatModels } from "@/lib/ai/models";
 import {
   createStreamId,
   deleteChatById,
@@ -203,9 +203,17 @@ export async function POST(request: Request) {
       selectedChatModel.includes("reasoning") ||
       selectedChatModel.includes("thinking");
 
-    // Choose model; if the requested one is not supported by our provider, fall back to default.
-    let effectiveModelId = selectedChatModel;
-    let effectiveModelSupportsTools = supportsTools(effectiveModelId);
+    // Validate the requested model against the allowed list; if invalid, reject early (no fallback).
+    const isKnownModel = chatModels.some((model) => model.id === selectedChatModel);
+    if (!isKnownModel) {
+      return new ChatSDKError(
+        "bad_request:api",
+        `Unsupported model "${selectedChatModel}".`
+      ).toResponse();
+    }
+
+    const effectiveModelId = selectedChatModel;
+    const effectiveModelSupportsTools = supportsTools(effectiveModelId);
 
     const modelMessages = await convertToModelMessages(uiMessages);
 
