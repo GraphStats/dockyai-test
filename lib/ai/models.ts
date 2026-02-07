@@ -33,6 +33,12 @@ export const chatModels: ChatModel[] = [
     provider: "zAI",
     description: "A powerful multilingual model",
   },
+  {
+    id: "mistralai/Devstral-2-123B-Instruct-2512",
+    name: "Devstral 2",
+    provider: "Mistral",
+    description: "Devstral is an agentic LLM for software engineering tasks.",
+  },
 ];
 
 /**
