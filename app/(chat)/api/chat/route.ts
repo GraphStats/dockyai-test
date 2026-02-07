@@ -161,6 +161,39 @@ export async function POST(request: Request) {
       ? (messages as ChatMessage[])
       : [...convertToUIMessages(messagesFromDb), message as ChatMessage];
 
+    // Inline file data (base64) for image/file parts so providers can consume them
+    const inlineFileData = async (msgs: ChatMessage[]) =>
+      Promise.all(
+        msgs.map(async (msg) => ({
+          ...msg,
+          parts: await Promise.all(
+            msg.parts.map(async (part) => {
+              if (
+                part.type === "file" &&
+                "url" in part &&
+                part.url &&
+                !("data" in part)
+              ) {
+                try {
+                  const res = await fetch(part.url);
+                  const buf = Buffer.from(await res.arrayBuffer());
+                  return {
+                    ...part,
+                    data: buf.toString("base64"),
+                  };
+                } catch (err) {
+                  console.error("Failed to inline file data:", err);
+                  return part;
+                }
+              }
+              return part;
+            })
+          ),
+        }))
+      );
+
+    const uiMessagesWithFiles = await inlineFileData(uiMessages);
+
     const { longitude, latitude, city, country } = geolocation(request);
 
     const requestHints: RequestHints = {
@@ -215,7 +248,7 @@ export async function POST(request: Request) {
     const effectiveModelId = selectedChatModel;
     const effectiveModelSupportsTools = supportsTools(effectiveModelId);
 
-    const modelMessages = await convertToModelMessages(uiMessages);
+    const modelMessages = await convertToModelMessages(uiMessagesWithFiles);
 
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
