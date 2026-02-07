@@ -16,6 +16,12 @@ export const chatModels: ChatModel[] = [
     description: "For powerful reasoning, agentic tasks, and versatile developer use cases."
   },
   {
+    id: "google/gemma-3-27b-it",
+    name: "Gemma 3",
+    provider: "Google",
+    description: "Gemma is a family of lightweight, state-of-the-art open models from Google"
+  },
+  {
     id: "Qwen/Qwen3-Next-80B-A3B-Instruct",
     name: "Qwen 3 Next",
     provider: "Alibaba",
