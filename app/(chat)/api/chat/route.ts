@@ -182,9 +182,11 @@ export async function POST(request: Request) {
                 try {
                   const res = await fetch(part.url);
                   const buf = Buffer.from(await res.arrayBuffer());
+                  const mediaType = (part as any).mediaType || "application/octet-stream";
+                  const dataUrl = `data:${mediaType};base64,${buf.toString("base64")}`;
                   return {
                     ...part,
-                    data: buf.toString("base64"),
+                    data: dataUrl,
                   };
                 } catch (err) {
                   console.error("Failed to inline file data:", err);
@@ -250,10 +252,11 @@ export async function POST(request: Request) {
       ).toResponse();
     }
 
-    const effectiveModelId = selectedChatModel;
-    const effectiveModelSupportsTools = supportsTools(effectiveModelId);
+    // Determine model & capabilities
+    let effectiveModelId = selectedChatModel;
+    let effectiveModelSupportsTools = supportsTools(effectiveModelId);
 
-    // Block images on non-vision models with a clear streaming message
+    // Block images on non-vision models; if a vision model is available, auto-switch with notice
     const hasImages = uiMessagesWithFiles.some((m) =>
       m.parts.some(
         (p) => p.type === "file" && p.mediaType?.startsWith("image/")
@@ -261,18 +264,24 @@ export async function POST(request: Request) {
     );
 
     if (hasImages && !visionSupportedModelIds.has(effectiveModelId)) {
-      const warningStream = createUIMessageStream({
-        originalMessages: uiMessagesWithFiles,
-        execute: async ({ writer }) => {
-          writer.write({
-            type: "data-textDelta",
-            data: `ℹ️ Le modèle "${effectiveModelId}" ne gère pas les images. Choisissez un modèle vision (par ex. Qwen/Qwen2.5-VL-72B-Instruct) ou envoyez uniquement du texte.`,
-            transient: true,
-          });
-        },
-        generateId: generateUUID,
-      });
-      return createUIMessageStreamResponse({ stream: warningStream });
+      const availableVision = Array.from(visionSupportedModelIds)[0];
+      if (availableVision) {
+        effectiveModelId = availableVision;
+        effectiveModelSupportsTools = supportsTools(effectiveModelId);
+      } else {
+        const warningStream = createUIMessageStream({
+          originalMessages: uiMessagesWithFiles,
+          execute: async ({ writer }) => {
+            writer.write({
+              type: "data-textDelta",
+              data: `ℹ️ Aucun modèle vision disponible pour traiter les images (modèle actuel: "${selectedChatModel}").`,
+              transient: true,
+            });
+          },
+          generateId: generateUUID,
+        });
+        return createUIMessageStreamResponse({ stream: warningStream });
+      }
     }
 
     const modelMessages = await convertToModelMessages(uiMessagesWithFiles);
