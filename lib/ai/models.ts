@@ -29,12 +29,6 @@ export const chatModels: ChatModel[] = [
     description: "Gemma is a family of lightweight, state-of-the-art open models from Google"
   },
   {
-    id: "google/gemma-2-9b",
-    name: "Gemma 2",
-    provider: "Google",
-    description: "Gemma is a family of lightweight, state-of-the-art open models from Google"
-  },
-  {
     id: "Qwen/Qwen3-Next-80B-A3B-Instruct",
     name: "Qwen 3 Next",
     provider: "Alibaba",
@@ -45,12 +39,6 @@ export const chatModels: ChatModel[] = [
     name: "Qwen 3 Coder",
     provider: "Alibaba",
     description: "Optimized for coding tasks",
-  },
-  {
-    id: "Qwen/Qwen2.5-VL-72B-Instruct",
-    name: "Qwen 2.5",
-    provider: "Alibaba",
-    description: "Vision-language 72B model with image understanding.",
   },
   {
     id: "zai-org/GLM-4.7",
@@ -75,12 +63,6 @@ export const chatModels: ChatModel[] = [
     name: "Llama 3",
     provider: "Meta",
     description: "The Meta Llama 3 collection of multilingual large language models"
-  },
-  {
-    id: "xai-org/grok-2",
-    name: "Grok 2",
-    provider: "xAI",
-    description: "This repository contains the weights of Grok 2, a model trained and used at xAI in 2024.",
   },
 ];
 
