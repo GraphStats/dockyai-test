@@ -139,6 +139,7 @@ export type ModelSelectorLogoProps = {
     | "inception"
     | "wandb"
     | "openai"
+    | "qwen"
     | "zhipuai-coding-plan"
     | "perplexity"
     | "openrouter"
@@ -173,7 +174,11 @@ export const ModelSelectorLogo = ({
     alt={`${provider} logo`}
     className={cn("size-3 dark:invert", className)}
     height={12}
-    src={`https://models.dev/logos/${provider}.svg`}
+    src={
+      provider === "qwen"
+        ? "/logos/qwen.svg"
+        : `https://models.dev/logos/${provider}.svg`
+    }
     unoptimized
     width={12}
   />
