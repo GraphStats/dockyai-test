@@ -48,8 +48,6 @@ const toolSupportedModelIds = new Set<string>([
   "meta-llama/Llama-3.1-8B-Instruct",
   "meta-llama/Llama-3.1-70B-Instruct",
   "meta-llama/Llama-3.3-70B-Instruct",
-  "moonshotai/Kimi-K2-Instruct",
-  "mistralai/Devstral-2-123B-Instruct-2512",
 ]);
 
 export const supportsTools = (modelId: string) =>
