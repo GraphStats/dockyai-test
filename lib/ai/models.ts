@@ -57,6 +57,12 @@ export const chatModels: ChatModel[] = [
     provider: "Moonshot",
     description: "Kimi K2 from Moonshot AI (Hugging Face responses endpoint).",
   },
+  {
+    id: "mistralai/Mistral-7B-Instruct-v0.2",
+    name: "Mistral v0.2",
+    provider: "Mistral",
+    description: "The Mistral-7B-Instruct-v0.2 LLM is an instruct fine-tuned version of the Mistral-7B-v0.2."
+  },
 ];
 
 /**
