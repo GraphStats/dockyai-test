@@ -221,23 +221,8 @@ export async function POST(request: Request) {
         }
 
         try {
-          let modelForCall;
-          try {
-            modelForCall = getLanguageModel(effectiveModelId);
-          } catch (modelErr: any) {
-            console.error("Model selection failed, falling back:", modelErr);
-            effectiveModelId = DEFAULT_CHAT_MODEL;
-            effectiveModelSupportsTools = supportsTools(effectiveModelId);
-            modelForCall = getLanguageModel(effectiveModelId);
-            dataStream.write({
-              type: "data-textDelta",
-              data: `ℹ️ Le modèle "${selectedChatModel}" n'est pas supporté par le provider. Bascule sur "${effectiveModelId}".`,
-              transient: true,
-            });
-          }
-
           const result = await streamText({
-            model: modelForCall,
+            model: getLanguageModel(effectiveModelId),
             system:
               systemPrompt({
                 selectedChatModel: effectiveModelId,
@@ -322,8 +307,7 @@ export async function POST(request: Request) {
           console.error("Error during stream execution:", err);
           dataStream.write({
             type: "data-textDelta",
-            data:
-              "Une erreur est survenue lors de l'appel au modèle. Merci de réessayer ou de choisir un autre modèle.",
+            data: `Erreur modèle "${selectedChatModel}" : ${err.message ?? "inconnue"}`,
             transient: true,
           });
           dataStream.write({ type: "error", errorText: err.message || "Unknown error" });
