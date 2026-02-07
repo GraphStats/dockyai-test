@@ -10,6 +10,12 @@ export type ChatModel = {
 
 export const chatModels: ChatModel[] = [
   {
+    id: "openai/gpt-oss-120b",
+    name: "GPT-4",
+    provider: "OpenAI",
+    description: "For powerful reasoning, agentic tasks, and versatile developer use cases."
+  },
+  {
     id: "Qwen/Qwen3-Next-80B-A3B-Instruct",
     name: "Qwen 3 Next",
     provider: "Alibaba",
