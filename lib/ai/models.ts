@@ -12,32 +12,38 @@ export const chatModels: ChatModel[] = [
   {
     id: "Qwen/Qwen2.5-7B-Instruct",
     name: "Qwen 2.5",
-    provider: "alibaba",
+    provider: "Alibaba",
     description: "Small and fast Qwen 2.5",
   },
   {
     id: "Qwen/Qwen2.5-72B-Instruct",
     name: "Qwen 2.5",
-    provider: "alibaba",
+    provider: "Alibaba",
     description: "The most powerful Qwen 2.5",
   },
     {
     id: "Qwen/Qwen3-Coder-30B-A3B-Instruct",
     name: "Qwen 3 Coder",
-    provider: "alibaba",
+    provider: "Alibaba",
     description: "Optimized for coding tasks",
   },
   {
     id: "zai-org/GLM-4.7-Flash:novita",
-    name: "GLM-4.7-Flash",
-    provider: "zai",
+    name: "GLM 4.7 Flash",
+    provider: "zAI",
     description: "A powerful multilingual model",
   },
   {
     id: "zai-org/GLM-4.7:novita",
-    name: "GLM-4.7",
-    provider: "zai",
+    name: "GLM 4.7",
+    provider: "zAI",
     description: "Enhanced version of GLM-4.7",
+  },
+  {
+    id: "mistralai/Devstral-2-123B-Instruct-2512",
+    name: "Devstral 2",
+    provider: "Mistral",
+    description: "Devstral is an agentic LLM for software engineering tasks."
   },
 ];
 
