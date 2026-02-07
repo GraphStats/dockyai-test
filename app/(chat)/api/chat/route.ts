@@ -203,10 +203,7 @@ export async function POST(request: Request) {
       selectedChatModel.includes("reasoning") ||
       selectedChatModel.includes("thinking");
 
-    const selectedModelSupportsTools = supportsTools(selectedChatModel);
-    const effectiveModelId = selectedModelSupportsTools
-      ? selectedChatModel
-      : DEFAULT_CHAT_MODEL;
+    const effectiveModelId = selectedChatModel;
     const effectiveModelSupportsTools = supportsTools(effectiveModelId);
 
     const modelMessages = await convertToModelMessages(uiMessages);
@@ -298,10 +295,10 @@ export async function POST(request: Request) {
             updateChatTitleById({ chatId: id, title });
           }
 
-          if (!selectedModelSupportsTools && effectiveModelSupportsTools) {
+          if (!effectiveModelSupportsTools) {
             dataStream.write({
               type: "data-textDelta",
-              data: `ℹ️ Le modèle "${selectedChatModel}" ne prend pas en charge les tools. Bascule automatique vers "${effectiveModelId}" pour permettre les artifacts et tools.`,
+              data: `ℹ️ Le modèle "${selectedChatModel}" ne prend pas en charge les tools. Réponse sans tools.`,
               transient: true,
             });
           }
