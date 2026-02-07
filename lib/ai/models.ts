@@ -55,7 +55,7 @@ export const chatModels: ChatModel[] = [
     id: "moonshotai/Kimi-K2-Instruct",
     name: "Kimi K2",
     provider: "Moonshot",
-    description: "Kimi K2 from Moonshot AI (Hugging Face responses endpoint).",
+    description: "Kimi K2 from Moonshot AI.",
   },
 ];
 

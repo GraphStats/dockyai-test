@@ -24,6 +24,7 @@ import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
+  AUTO_MODEL_ID,
   DEFAULT_CHAT_MODEL,
   supportsTools,
   chatModels,
@@ -242,7 +243,9 @@ export async function POST(request: Request) {
       selectedChatModel.includes("thinking");
 
     // Validate the requested model against the allowed list; if invalid, reject early (no fallback).
-    const isKnownModel = chatModels.some((model) => model.id === selectedChatModel);
+    const isKnownModel =
+      selectedChatModel === AUTO_MODEL_ID ||
+      chatModels.some((model) => model.id === selectedChatModel);
     if (!isKnownModel) {
       return new ChatSDKError(
         "bad_request:api",
@@ -251,7 +254,12 @@ export async function POST(request: Request) {
     }
 
     // Determine model & capabilities
-    let effectiveModelId = selectedChatModel;
+    let effectiveModelId =
+      selectedChatModel === AUTO_MODEL_ID
+        ? hasImages && visionSupportedModelIds.size > 0
+          ? Array.from(visionSupportedModelIds)[0]
+          : DEFAULT_CHAT_MODEL
+        : selectedChatModel;
     let effectiveModelSupportsTools = supportsTools(effectiveModelId);
 
     // Block images on non-vision models; if a vision model is available, auto-switch with notice
