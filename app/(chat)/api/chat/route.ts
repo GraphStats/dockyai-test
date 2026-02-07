@@ -194,6 +194,25 @@ export async function POST(request: Request) {
 
     const uiMessagesWithFiles = await inlineFileData(uiMessages);
 
+    // If images are present but the model is not vision-capable, warn and strip them
+    const hasImages = uiMessagesWithFiles.some((m) =>
+      m.parts.some(
+        (p) => p.type === "file" && p.mediaType?.startsWith("image/")
+      )
+    );
+
+    if (hasImages && !visionSupportedModelIds.has(effectiveModelId)) {
+      // Notify user in-stream and drop images to avoid silent provider failure
+      const ui = createUIMessageStream({ originalMessages: uiMessagesWithFiles });
+      ui.write({
+        type: "data-textDelta",
+        data: `ℹ️ Le modèle "${effectiveModelId}" ne gère pas les images. Choisissez un modèle vision (par ex. Qwen2.5-VL) ou envoyez du texte.`,
+        transient: true,
+      });
+      ui.close();
+      return createUIMessageStreamResponse({ stream: ui });
+    }
+
     const { longitude, latitude, city, country } = geolocation(request);
 
     const requestHints: RequestHints = {

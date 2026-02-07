@@ -53,6 +53,11 @@ const toolSupportedModelIds = new Set<string>([
 export const supportsTools = (modelId: string) =>
   toolSupportedModelIds.has(modelId);
 
+// Vision-capable models (accept image parts). Fill as you verify them.
+export const visionSupportedModelIds = new Set<string>([
+  // e.g. "Qwen/Qwen2.5-VL-7B-Instruct" when added
+]);
+
 // Group models by provider for UI
 export const modelsByProvider = chatModels.reduce(
   (acc, model) => {
