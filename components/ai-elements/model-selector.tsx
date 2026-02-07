@@ -127,6 +127,7 @@ export type ModelSelectorLogoProps = {
     | "cortecs"
     | "github-models"
     | "togetherai"
+    | "qwen"
     | "azure"
     | "baseten"
     | "huggingface"

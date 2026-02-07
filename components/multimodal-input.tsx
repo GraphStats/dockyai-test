@@ -476,7 +476,7 @@ function PureModelSelectorCompact({
   const getLogoProvider = useCallback(
     (modelId: string, provider?: string) => {
       const slug = (modelId.split("/")[0] || "").toLowerCase();
-      if (slug.startsWith("qwen")) return "alibaba";
+      if (slug.startsWith("qwen")) return "qwen";
       if (slug.startsWith("zai")) return "zai";
       if (slug.startsWith("moonshotai")) return "moonshotai";
       if (slug === "glm" || slug.startsWith("glm")) return "zai";
