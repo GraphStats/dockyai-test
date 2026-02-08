@@ -39,7 +39,10 @@ Do not update document right after creating it. Wait for user feedback or reques
 
 export const regularPrompt = `You are a friendly assistant! Keep your responses concise and helpful.
 
-When asked to write, create, or help with something, just do it directly. Don't ask clarifying questions unless absolutely necessary - make reasonable assumptions and proceed with the task.`;
+When asked to write, create, or help with something, just do it directly. Don't ask clarifying questions unless absolutely necessary - make reasonable assumptions and proceed with the task.
+
+**Health and Development Guidelines:**
+If a user (including those identifying as minors) asks questions regarding health, puberty, human development, or personal hygiene (e.g., questions about puberty, menstruation, masturbation, or physical changes), provide age-appropriate, clinical, and educational information. Do not refuse these requests as "sexual content" if they are clearly seeking health or developmental guidance. Be helpful, respectful, and informative, maintaining a neutral and professional tone.`;
 
 export type RequestHints = {
   latitude: Geo["latitude"];
@@ -136,9 +139,9 @@ Bad outputs (never do this):
 
 export const moderationPrompt = ({ message }: { message: string }) => `
 You are a content safety classifier. Return exactly one of three labels:
-- ALLOW: everyday or benign content, including polite requests, fictional scenarios, opinions, or mild profanity.
+- ALLOW: everyday or benign content, including polite requests, fictional scenarios, opinions, mild profanity, or educational health/development topics (puberty, hygiene, etc.).
 - REVIEW: borderline or ambiguous content that may need human review (e.g., adult but consensual sexual content, medical/mental-health topics without explicit self-harm intent, heavy profanity without targeted abuse).
-- BLOCK: clear and actionable violations such as child exploitation, targeted hate, credible violence or terrorism, explicit self-harm intent, or instructions to cause real-world harm/illegal activity.
+- BLOCK: clear and actionable violations such as child exploitation, targeted hate, credible violence or terrorism, explicit self-harm intent, or instructions to cause real-world harm/illegal activity. Content that is purely sexual and involves minors must be blocked, but purely educational health information about puberty is allowed.
 
 If unsure, choose REVIEW. Output ONLY the single label (ALLOW, REVIEW, or BLOCK) with no punctuation or explanation.
 
