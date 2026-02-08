@@ -1,6 +1,6 @@
-import { simulateReadableStream } from "ai";
+import { simulateReadableStream, LanguageModelV3FinishReason } from "ai";
 import { MockLanguageModelV3 } from "ai/test";
-import { getResponseChunksByPrompt } from "@/tests/prompts/utils";
+import { getResponseChunksByPrompt } from "../../tests/prompts/utils";
 
 const mockUsage = {
   inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
@@ -9,34 +9,34 @@ const mockUsage = {
 
 export const chatModel = new MockLanguageModelV3({
   doGenerate: async () => ({
-    finishReason: "stop",
+    finishReason: "stop" as LanguageModelV3FinishReason,
     usage: mockUsage,
     content: [{ type: "text", text: "Hello, world!" }],
     warnings: [],
   }),
-  doStream: (async ({ prompt }) => ({
+  doStream: async ({ prompt }: any) => ({
     stream: simulateReadableStream({
       chunkDelayInMs: 500,
       initialDelayInMs: 1000,
       chunks: getResponseChunksByPrompt(prompt),
     }),
-  })) as any,
+  }),
 });
 
 export const reasoningModel = new MockLanguageModelV3({
   doGenerate: async () => ({
-    finishReason: "stop",
+    finishReason: "stop" as LanguageModelV3FinishReason,
     usage: mockUsage,
     content: [{ type: "text", text: "Hello, world!" }],
     warnings: [],
   }),
-  doStream: (async ({ prompt }) => ({
+  doStream: async ({ prompt }: any) => ({
     stream: simulateReadableStream({
       chunkDelayInMs: 500,
       initialDelayInMs: 1000,
       chunks: getResponseChunksByPrompt(prompt, true),
     }),
-  })) as any,
+  }),
 });
 
 export const titleModel = new MockLanguageModelV3({
@@ -66,16 +66,16 @@ export const titleModel = new MockLanguageModelV3({
 
 export const artifactModel = new MockLanguageModelV3({
   doGenerate: async () => ({
-    finishReason: "stop",
+    finishReason: "stop" as LanguageModelV3FinishReason,
     usage: mockUsage,
     content: [{ type: "text", text: "Hello, world!" }],
     warnings: [],
   }),
-  doStream: (async ({ prompt }) => ({
+  doStream: async ({ prompt }: any) => ({
     stream: simulateReadableStream({
       chunkDelayInMs: 50,
       initialDelayInMs: 100,
       chunks: getResponseChunksByPrompt(prompt),
     }),
-  })) as any,
+  }),
 });
