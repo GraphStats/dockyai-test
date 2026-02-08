@@ -49,7 +49,7 @@ import { ChatSDKError } from "@/lib/errors";
 import type { ChatMessage } from "@/lib/types";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
-import { checkMessageWithAI } from "@/lib/ai/moderation-ai"; // Import the AI moderation utility
+import { checkMessageWithAI, type ModerationDecision } from "@/lib/ai/moderation-ai"; // Import the AI moderation utility
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 import { z } from "zod";
 
@@ -217,9 +217,9 @@ export async function POST(request: Request) {
         .join(" ");
 
       // Perform AI moderation check
-      const isUnsafe = await checkMessageWithAI(userMessageText);
-      if (isUnsafe) {
-        console.warn(`AI moderation detected unsafe content in user message: "${userMessageText}"`);
+      const userModerationDecision: ModerationDecision = await checkMessageWithAI(userMessageText);
+      if (userModerationDecision === "block") {
+        console.warn(`AI moderation blocked user message: "${userMessageText}"`);
         throw new ChatSDKError("forbidden:content");
       }
 
@@ -232,7 +232,8 @@ export async function POST(request: Request) {
             parts: message.parts,
             attachments: [],
             createdAt: new Date(),
-            moderation: false,
+            // Flag messages that need human review without fully blocking them.
+            moderation: userModerationDecision === "review",
           },
         ],
       });
@@ -402,10 +403,10 @@ export async function POST(request: Request) {
 
           // AI Moderation for AI-generated messages (post-stream)
           const aiResponse = await result.text; // full text after stream
-          const isAIResponseUnsafe = await checkMessageWithAI(aiResponse);
+          const aiModerationDecision: ModerationDecision = await checkMessageWithAI(aiResponse);
 
-          if (isAIResponseUnsafe) {
-            console.warn(`AI moderation detected unsafe content in AI response: "${aiResponse}"`);
+          if (aiModerationDecision === "block") {
+            console.warn(`AI moderation blocked unsafe AI response: "${aiResponse}"`);
             dataStream.write({
               type: "data-textDelta",
               data: "Message modéré : le contenu a été jugé inapproprié.",
@@ -416,6 +417,11 @@ export async function POST(request: Request) {
               messageMetadata: { moderation: true, createdAt: new Date().toISOString() },
             });
             // The AI message will be saved with the moderation flag in onFinish below
+          } else if (aiModerationDecision === "review") {
+            dataStream.write({
+              type: "message-metadata",
+              messageMetadata: { moderation: true, createdAt: new Date().toISOString() },
+            });
           }
 
           if (titlePromise) {
@@ -552,3 +558,4 @@ export async function DELETE(request: Request) {
 
   return Response.json(deletedChat, { status: 200 });
 }
+

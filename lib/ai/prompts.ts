@@ -135,9 +135,12 @@ Bad outputs (never do this):
 - ""NYC Weather"" (no quotes)`;
 
 export const moderationPrompt = ({ message }: { message: string }) => `
-You are a highly skilled content moderation AI. Your task is to analyze the following message and determine if it contains any harmful, offensive, illegal, or inappropriate content, including but not limited to hate speech, harassment, violence, sexual content, or discrimination.
+You are a content safety classifier. Return exactly one of three labels:
+- ALLOW: everyday or benign content, including polite requests, fictional scenarios, opinions, or mild profanity.
+- REVIEW: borderline or ambiguous content that may need human review (e.g., adult but consensual sexual content, medical/mental-health topics without explicit self-harm intent, heavy profanity without targeted abuse).
+- BLOCK: clear and actionable violations such as child exploitation, targeted hate, credible violence or terrorism, explicit self-harm intent, or instructions to cause real-world harm/illegal activity.
 
-Respond ONLY with "SAFE" if the message is appropriate, or "UNSAFE" if it contains forbidden content. Do NOT add any other text, explanation, or punctuation.
+If unsure, choose REVIEW. Output ONLY the single label (ALLOW, REVIEW, or BLOCK) with no punctuation or explanation.
 
 Message to moderate:
 """
