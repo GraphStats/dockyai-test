@@ -70,6 +70,11 @@ export default function RootLayout({
             __html: THEME_COLOR_SCRIPT,
           }}
         />
+        <script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="5a2758cb-3c9e-496e-a013-5ee405ccb9c3"
+        />
       </head>
       <body className="antialiased">
         <ThemeProvider
