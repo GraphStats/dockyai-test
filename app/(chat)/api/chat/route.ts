@@ -324,18 +324,24 @@ export async function POST(request: Request) {
       }
     }
 
-    const modelMessages = await convertToModelMessages(uiMessagesWithFiles);
+    let userData = null;
+    try {
+      userData = await getOrCreateUser(currentUserId); // Use currentUserId
+    } catch (dbError) {
+      console.error("Failed to fetch or create user, using defaults:", dbError);
+    }
+
+    const shouldUseChatHistory = userData?.referenceChatHistory ?? true;
+    const modelInputMessages = shouldUseChatHistory
+      ? uiMessagesWithFiles
+      : uiMessagesWithFiles.slice(-1);
+
+    const modelMessages = await convertToModelMessages(modelInputMessages);
 
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
       execute: async ({ writer: dataStream }) => {
         console.log("Starting stream with model:", selectedChatModel);
-        let userData = null;
-        try {
-          userData = await getOrCreateUser(currentUserId); // Use currentUserId
-        } catch (dbError) {
-          console.error("Failed to fetch or create user, using defaults:", dbError);
-        }
 
         try {
           // Inform UI (transient) about the model actually used
@@ -353,6 +359,8 @@ export async function POST(request: Request) {
                 requestHints,
                 customInstructions: userData?.customInstructions || undefined,
                 useLocation: userData?.useLocation ?? true,
+                referenceChatHistory: userData?.referenceChatHistory ?? true,
+                referenceMemories: userData?.referenceMemories ?? true,
               }) +
               (effectiveModelSupportsTools
                 ? `\n\n${artifactsPrompt}`

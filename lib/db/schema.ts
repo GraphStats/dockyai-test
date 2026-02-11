@@ -17,6 +17,8 @@ export const user = pgTable("User", {
   password: varchar("password", { length: 255 }), // Clerk handles passwords, but keeping for legacy
   customInstructions: text("customInstructions"),
   useLocation: boolean("useLocation").default(true),
+  referenceChatHistory: boolean("referenceChatHistory").default(true),
+  referenceMemories: boolean("referenceMemories").default(true),
 });
 
 export type User = InferSelectModel<typeof user>;

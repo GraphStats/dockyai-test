@@ -66,16 +66,26 @@ export const systemPrompt = ({
   requestHints,
   customInstructions,
   useLocation,
+  referenceChatHistory,
+  referenceMemories,
 }: {
   selectedChatModel: string;
   requestHints: RequestHints;
   customInstructions?: string;
   useLocation?: boolean;
+  referenceChatHistory?: boolean;
+  referenceMemories?: boolean;
 }) => {
   const requestPrompt = useLocation !== false ? getRequestPromptFromHints(requestHints) : "";
   const personalityPrompt = customInstructions ? `\n\nUser's custom instructions/personality: ${customInstructions}` : "";
+  const chatHistoryPrompt = referenceChatHistory === false
+    ? "\n\nIgnore prior chat turns unless the user re-shares context in this message."
+    : "\n\nLeverage the current chat history to stay consistent and avoid repeating questions.";
+  const memoryPrompt = referenceMemories === false
+    ? "\n\nDo not reference or rely on memorized/saved user items unless they are provided in this chat."
+    : "\n\nYou may cite memorized user notes or saved elements when they are relevant; mention when you do so.";
   
-  return `${regularPrompt}\n\n${requestPrompt}${personalityPrompt}`;
+  return `${regularPrompt}\n\n${requestPrompt}${personalityPrompt}${chatHistoryPrompt}${memoryPrompt}`;
 };
 
 export const codePrompt = `

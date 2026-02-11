@@ -20,7 +20,12 @@ function SubmitButton() {
 }
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState({ customInstructions: "", useLocation: true });
+  const [settings, setSettings] = useState({
+    customInstructions: "",
+    useLocation: true,
+    referenceChatHistory: true,
+    referenceMemories: true,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -41,10 +46,17 @@ export default function SettingsPage() {
     const formData = new FormData(e.currentTarget);
     const customInstructions = formData.get("customInstructions") as string;
     const useLocation = formData.get("useLocation") === "on";
+    const referenceChatHistory = formData.get("referenceChatHistory") === "on";
+    const referenceMemories = formData.get("referenceMemories") === "on";
 
     try {
       await updateUserSettings(formData);
-      setSettings({ customInstructions, useLocation });
+      setSettings({
+        customInstructions,
+        useLocation,
+        referenceChatHistory,
+        referenceMemories,
+      });
       toast("Settings saved successfully!");
     } catch (err) {
       toast("Failed to save settings. Please try again.");
@@ -137,21 +149,57 @@ export default function SettingsPage() {
               Control what information is shared with the AI.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="useLocation">Share Location</Label>
-              <p className="text-sm text-muted-foreground">
-                Allow the AI to see your city and country to give local information.
-              </p>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="useLocation">Share Location</Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow the AI to see your city and country to give local information.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                id="useLocation"
+                name="useLocation"
+                checked={settings.useLocation}
+                onChange={(e) => setSettings({ ...settings, useLocation: e.target.checked })}
+                className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+              />
             </div>
-            <input
-              type="checkbox"
-              id="useLocation"
-              name="useLocation"
-              checked={settings.useLocation}
-              onChange={(e) => setSettings({ ...settings, useLocation: e.target.checked })}
-              className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
-            />
+
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="referenceChatHistory">Référencer l'historique du chat</Label>
+                <p className="text-sm text-muted-foreground">
+                  Autoriser l'IA à s'appuyer sur les messages précédents de cette conversation pour répondre.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                id="referenceChatHistory"
+                name="referenceChatHistory"
+                checked={settings.referenceChatHistory}
+                onChange={(e) => setSettings({ ...settings, referenceChatHistory: e.target.checked })}
+                className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="referenceMemories">Référencer les éléments mémorisés</Label>
+                <p className="text-sm text-muted-foreground">
+                  Permettre l'usage d'éléments mémorisés/sauvegardés. Désactivez pour des réponses sans souvenirs.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                id="referenceMemories"
+                name="referenceMemories"
+                checked={settings.referenceMemories}
+                onChange={(e) => setSettings({ ...settings, referenceMemories: e.target.checked })}
+                className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+            </div>
           </CardContent>
         </Card>
 

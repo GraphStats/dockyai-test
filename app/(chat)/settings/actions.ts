@@ -13,10 +13,14 @@ export async function updateUserSettings(formData: FormData) {
   try {
     const customInstructions = formData.get("customInstructions") as string;
     const useLocation = formData.get("useLocation") === "on";
+    const referenceChatHistory = formData.get("referenceChatHistory") === "on";
+    const referenceMemories = formData.get("referenceMemories") === "on";
 
     await updateUserById(userId, {
       customInstructions,
       useLocation,
+      referenceChatHistory,
+      referenceMemories,
     });
 
     revalidatePath("/settings");
@@ -32,6 +36,8 @@ export async function getUserSettings() {
     return {
       customInstructions: "",
       useLocation: true,
+      referenceChatHistory: true,
+      referenceMemories: true,
     };
   }
 
@@ -41,12 +47,16 @@ export async function getUserSettings() {
     return {
       customInstructions: user?.customInstructions || "",
       useLocation: user?.useLocation ?? true,
+      referenceChatHistory: user?.referenceChatHistory ?? true,
+      referenceMemories: user?.referenceMemories ?? true,
     };
   } catch (error) {
     console.error("Failed to fetch settings from DB:", error);
     return {
       customInstructions: "",
       useLocation: true,
+      referenceChatHistory: true,
+      referenceMemories: true,
     };
   }
 }

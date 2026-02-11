@@ -90,6 +90,8 @@ export async function getOrCreateUser(id: string, email?: string): Promise<User>
       email: email || `user-${id}`,
       useLocation: true,
       customInstructions: "",
+      referenceChatHistory: true,
+      referenceMemories: true,
     }).returning();
     return newUser;
   } catch (error) {
@@ -100,6 +102,8 @@ export async function getOrCreateUser(id: string, email?: string): Promise<User>
       email: email || `user-${id}`,
       customInstructions: "",
       useLocation: true,
+      referenceChatHistory: true,
+      referenceMemories: true,
       password: null,
     } as User;
   }
@@ -138,7 +142,9 @@ export async function createGuestUser() {
       email,
       password,
       useLocation: true,
-      customInstructions: ""
+      customInstructions: "",
+      referenceChatHistory: true,
+      referenceMemories: true,
     }).returning({
       id: user.id,
       email: user.email,
