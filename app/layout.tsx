@@ -6,6 +6,13 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 
+const AFTER_SIGN_IN_URL =
+  process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL ?? "/chat";
+const AFTER_SIGN_UP_URL =
+  process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL ?? "/chat";
+const AFTER_SIGN_OUT_URL =
+  process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL ?? "/";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://chat.vercel.ai"),
   title: "DockyAI",
@@ -84,7 +91,11 @@ export default function RootLayout({
           enableSystem
         >
           <Toaster position="top-center" />
-          <ClerkProvider signInFallbackRedirectUrl="/chat" afterSignOutUrl="/">
+          <ClerkProvider
+            signInFallbackRedirectUrl={AFTER_SIGN_IN_URL}
+            signUpFallbackRedirectUrl={AFTER_SIGN_UP_URL}
+            afterSignOutUrl={AFTER_SIGN_OUT_URL}
+          >
             {children}
           </ClerkProvider>
         </ThemeProvider>
