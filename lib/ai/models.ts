@@ -102,7 +102,7 @@ export const chatModels: ChatModel[] = [
     name: "Llama 4",
     provider: "Meta",
     description: "Fastest variant of Llama 4 Scout 17B 16E Instruct.",
-    creditCost: 3,
+    creditCost: 4,
   },
   {
     id: "meta-llama/Llama-3.1-8B-Instruct:fastest",
