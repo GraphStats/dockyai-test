@@ -28,6 +28,13 @@ export const chatModels: ChatModel[] = [
     creditCost: 2,
   },
   {
+    id: "Qwen/Qwen3-8B:fastest",
+    name: "Qwen 3",
+    provider: "Alibaba",
+    description: "Fastest variant of Qwen 3 8B.",
+    creditCost: 4,
+  },
+  {
     id: "Qwen/Qwen3-Next-80B-A3B-Instruct",
     name: "Qwen 3 Next",
     provider: "Alibaba",
