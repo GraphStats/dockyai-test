@@ -30,22 +30,53 @@ export async function fetchWithErrorHandlers(
   input: RequestInfo | URL,
   init?: RequestInit,
 ) {
-  try {
-    const response = await fetch(input, init);
+  const maxRetries = 3;
 
-    if (!response.ok) {
-      const { code, cause } = await response.json();
-      throw new ChatSDKError(code as ErrorCode, cause);
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(input, init);
+
+      if (!response.ok) {
+        let parsedCode: ErrorCode | null = null;
+        let parsedCause: string | undefined;
+
+        try {
+          const parsed = await response.clone().json();
+          parsedCode = (parsed?.code as ErrorCode) ?? null;
+          parsedCause = parsed?.cause as string | undefined;
+        } catch (_) {
+          // ignore JSON parse failures on non-JSON responses
+        }
+
+        // Retry on transient server/network class errors.
+        if (response.status >= 500 && attempt < maxRetries) {
+          await new Promise((resolve) => setTimeout(resolve, attempt * 250));
+          continue;
+        }
+
+        if (parsedCode) {
+          throw new ChatSDKError(parsedCode, parsedCause);
+        }
+
+        throw new ChatSDKError('bad_request:api');
+      }
+
+      return response;
+    } catch (error: unknown) {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        throw new ChatSDKError('offline:chat');
+      }
+
+      if (attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 250));
+        continue;
+      }
+
+      throw error;
     }
-
-    return response;
-  } catch (error: unknown) {
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      throw new ChatSDKError('offline:chat');
-    }
-
-    throw error;
   }
+
+  throw new ChatSDKError('offline:chat');
 }
 
 export function getLocalStorage(key: string) {

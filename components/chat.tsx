@@ -1,7 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { useChat } from "@ai-sdk/react";
+import { motion } from "framer-motion";
 import { DefaultChatTransport } from "ai";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -198,15 +198,13 @@ export function Chat({
           selectedVisibilityType={initialVisibilityType}
         />
 
-        <AnimatePresence mode="wait">
-          {messages.length === 0 ? (
-            <motion.div
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-1 flex-col items-center justify-center p-4"
-              exit={{ opacity: 0, y: -20 }}
-              initial={{ opacity: 0, y: 20 }}
-              key="empty"
-            >
+        {messages.length === 0 ? (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-1 flex-col items-center justify-center p-4"
+            initial={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.16 }}
+          >
               <div className="w-full max-w-3xl space-y-8">
                 <Greeting />
                 {!isReadonly && (
@@ -227,14 +225,14 @@ export function Chat({
                   />
                 )}
               </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              animate={{ opacity: 1 }}
-              className="flex flex-1 flex-col overflow-hidden"
-              initial={{ opacity: 0 }}
-              key="chat-content"
-            >
+          </motion.div>
+        ) : (
+          <motion.div
+            animate={{ opacity: 1 }}
+            className="flex flex-1 flex-col overflow-hidden"
+            initial={{ opacity: 0 }}
+            transition={{ duration: 0.14 }}
+          >
               <Messages
                 addToolApprovalResponse={addToolApprovalResponse}
                 chatId={id}
@@ -267,9 +265,8 @@ export function Chat({
                   />
                 )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </motion.div>
+        )}
       </div>
 
       <Artifact

@@ -5,14 +5,7 @@ const textPartSchema = z.object({
   text: z.string().min(1).max(2000),
 });
 
-const filePartSchema = z.object({
-  type: z.enum(["file"]),
-  mediaType: z.enum(["image/jpeg", "image/png"]),
-  name: z.string().min(1).max(100),
-  url: z.string().url(),
-});
-
-const partSchema = z.union([textPartSchema, filePartSchema]);
+const partSchema = textPartSchema;
 
 const userMessageSchema = z.object({
   id: z.string().uuid(),
