@@ -90,20 +90,10 @@ export default async function StatsPage() {
             </span>
           </p>
           <p>
-            Budget HF estime (mois):{" "}
-            <span className="font-semibold">
-              {(hfPricing.monthlyBudgetMicros / 1_000_000).toFixed(2)} EUR
-            </span>
-          </p>
-          <p>
             Restant HF estime:{" "}
             <span className="font-semibold">
               {(hfPricing.remainingMicros / 1_000_000).toFixed(4)} EUR
             </span>
-          </p>
-          <p>
-            Multiplicateur actif:{" "}
-            <span className="font-semibold">x{hfPricing.activeMultiplier.toFixed(2)}</span>
           </p>
           <form action={borrowFromTomorrow} className="flex items-end gap-2 pt-2">
             <div className="flex-1">
