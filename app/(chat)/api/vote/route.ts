@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { appAuth } from "@/lib/auth/server";
 import { getChatById, getVotesByChatId, voteMessage } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     ).toResponse();
   }
 
-  const { userId } = await auth();
+  const { userId } = await appAuth();
 
   if (!userId) {
     return new ChatSDKError("unauthorized:vote").toResponse();
@@ -49,7 +49,7 @@ export async function PATCH(request: Request) {
     ).toResponse();
   }
 
-  const { userId } = await auth();
+  const { userId } = await appAuth();
 
   if (!userId) {
     return new ChatSDKError("unauthorized:vote").toResponse();
@@ -73,3 +73,4 @@ export async function PATCH(request: Request) {
 
   return new Response("Message voted", { status: 200 });
 }
+

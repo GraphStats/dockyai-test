@@ -3,7 +3,7 @@
 import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useAppUser } from "@/lib/auth/client";
 import { useState } from "react";
 import { toast } from "sonner";
 import useSWRInfinite from "swr/infinite";
@@ -98,7 +98,7 @@ export function getChatHistoryPaginationKey(
 }
 
 export function SidebarHistory() {
-  const { user } = useUser();
+  const { user } = useAppUser();
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
   const id = pathname?.startsWith("/chat/") ? pathname.split("/")[2] : null;
@@ -375,3 +375,4 @@ export function SidebarHistory() {
     </>
   );
 }
+

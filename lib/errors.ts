@@ -97,7 +97,7 @@ export function getMessageByErrorCode(errorCode: ErrorCode): string {
       return "Your message contains forbidden content. Please revise it and try again.";
 
     case "rate_limit:chat":
-      return "You have exceeded your maximum number of messages for the day. Please try again later.";
+      return "You do not have enough daily credits left for this model. Please try again tomorrow.";
     case "not_found:chat":
       return "The requested chat was not found. Please check the chat ID and try again.";
     case "forbidden:chat":

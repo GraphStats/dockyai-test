@@ -26,6 +26,7 @@ import {
   ModelSelectorList,
   ModelSelectorLogo,
   ModelSelectorName,
+  ModelSelectorShortcut,
   ModelSelectorTrigger,
 } from "@/components/ai-elements/model-selector";
 import {
@@ -536,6 +537,11 @@ function PureModelSelectorCompact({
                     >
                       <ModelSelectorLogo provider={logoProvider} />
                       <ModelSelectorName>{model.name}</ModelSelectorName>
+                      <ModelSelectorShortcut>
+                        {model.id === "auto"
+                          ? "variable"
+                          : `${model.creditCost} coins`}
+                      </ModelSelectorShortcut>
                       {model.id === selectedModel.id && (
                         <CheckIcon className="ml-auto size-4" />
                       )}

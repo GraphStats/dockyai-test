@@ -3,7 +3,7 @@
 import { ChevronUp } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useAppClerk, useAppUser } from "@/lib/auth/client";
 import { useTheme } from "next-themes";
 import {
   DropdownMenu,
@@ -23,8 +23,8 @@ import { toast } from "./toast";
 
 export function SidebarUserNav() {
   const router = useRouter();
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { user, isLoaded } = useAppUser();
+  const { signOut } = useAppClerk();
   const { setTheme, resolvedTheme } = useTheme();
 
   if (!isLoaded) {
@@ -125,3 +125,4 @@ export function SidebarUserNav() {
     </SidebarMenu>
   );
 }
+

@@ -10,8 +10,8 @@ import {
 } from "ai";
 import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream";
-import { auth } from "@clerk/nextjs/server";
-import { entitlementsByUserType, UserType } from "@/lib/ai/entitlements"; // Import UserType
+import { appAuth } from "@/lib/auth/server";
+import { type UserType } from "@/lib/ai/entitlements";
 import {
   artifactsPrompt,
   type RequestHints,
@@ -26,18 +26,18 @@ import { isProductionEnvironment } from "@/lib/constants";
 import {
   AUTO_MODEL_ID,
   DEFAULT_CHAT_MODEL,
+  getModelCreditCost,
   supportsTools,
   chatModels,
   visionSupportedModelIds,
 } from "@/lib/ai/models";
 import {
+  consumeDailyCreditsByUserId,
   createStreamId,
   deleteChatById,
   getChatById,
-  getMessageCountByUserId,
   getMessagesByChatId,
   getOrCreateUser,
-  getUserById,
   saveChat,
   saveMessages,
   updateChatTitleById,
@@ -86,7 +86,21 @@ export async function POST(request: Request) {
     const { id, message, messages, selectedChatModel, selectedVisibilityType } =
       requestBody;
 
-    const { userId: clerkUserId } = await auth(); // Rename to avoid conflict
+    if (!process.env.POSTGRES_URL) {
+      return new ChatSDKError(
+        "bad_request:api",
+        "POSTGRES_URL is missing. Please add it to your environment variables."
+      ).toResponse();
+    }
+
+    if (!process.env.HUGGING_FACE_API_KEY) {
+      return new ChatSDKError(
+        "bad_request:api",
+        "HUGGING_FACE_API_KEY is missing. Please add it to your environment variables."
+      ).toResponse();
+    }
+
+    const { userId: clerkUserId } = await appAuth(); // Rename to avoid conflict
 
     let currentUserId: string;
     let userType: UserType;
@@ -119,25 +133,9 @@ export async function POST(request: Request) {
     // Ensure user exists in local DB before saving any related records (Chat, Message, etc.)
     try {
       // getOrCreateUser can handle both existing Clerk users and new guest IDs
-      await getOrCreateUser(currentUserId); 
+      await getOrCreateUser(currentUserId, undefined, { userType });
     } catch (dbError) {
       console.error("Failed to provision user in local DB:", dbError);
-    }
-
-    if (!process.env.HUGGING_FACE_API_KEY) {
-      return new ChatSDKError(
-        "bad_request:api",
-        "HUGGING_FACE_API_KEY is missing. Please add it to your environment variables."
-      ).toResponse();
-    }
-
-    const messageCount = await getMessageCountByUserId({
-      id: currentUserId,
-      differenceInHours: 24,
-    });
-
-    if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
-      return new ChatSDKError("rate_limit:chat").toResponse();
     }
 
     const isToolApprovalFlow = Boolean(messages);
@@ -209,34 +207,18 @@ export async function POST(request: Request) {
       country,
     };
 
+    let userModerationDecision: ModerationDecision = "allow";
     if (message?.role === "user") {
-      // Extract text content from the user message parts
       const userMessageText = message.parts
         .filter((part) => part.type === "text" && part.text)
-        .map((part) => (part as { text: string }).text) // Type assertion added here
+        .map((part) => (part as { text: string }).text)
         .join(" ");
 
-      // Perform AI moderation check
-      const userModerationDecision: ModerationDecision = await checkMessageWithAI(userMessageText);
+      userModerationDecision = await checkMessageWithAI(userMessageText);
       if (userModerationDecision === "block") {
         console.warn(`AI moderation blocked user message: "${userMessageText}"`);
         throw new ChatSDKError("forbidden:content");
       }
-
-      await saveMessages({
-        messages: [
-          {
-            chatId: id,
-            id: message.id,
-            role: "user",
-            parts: message.parts,
-            attachments: [],
-            createdAt: new Date(),
-            // Flag messages that need human review without fully blocking them.
-            moderation: userModerationDecision === "review",
-          },
-        ],
-      });
     }
 
     const isReasoningModel =
@@ -324,9 +306,39 @@ export async function POST(request: Request) {
       }
     }
 
+    if (!isToolApprovalFlow && message?.role === "user") {
+      const creditsToConsume = getModelCreditCost(effectiveModelId);
+      const creditsResult = await consumeDailyCreditsByUserId({
+        id: currentUserId,
+        userType,
+        amount: creditsToConsume,
+      });
+
+      if (!creditsResult.allowed) {
+        return new ChatSDKError(
+          "rate_limit:chat",
+          `Insufficient credits: ${creditsResult.remainingCredits}/${creditsResult.dailyCredits} available, requires ${creditsToConsume}`
+        ).toResponse();
+      }
+
+      await saveMessages({
+        messages: [
+          {
+            chatId: id,
+            id: message.id,
+            role: "user",
+            parts: message.parts,
+            attachments: [],
+            createdAt: new Date(),
+            moderation: userModerationDecision === "review",
+          },
+        ],
+      });
+    }
+
     let userData = null;
     try {
-      userData = await getOrCreateUser(currentUserId); // Use currentUserId
+      userData = await getOrCreateUser(currentUserId, undefined, { userType }); // Use currentUserId
     } catch (dbError) {
       console.error("Failed to fetch or create user, using defaults:", dbError);
     }
@@ -549,7 +561,7 @@ export async function DELETE(request: Request) {
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
-  const { userId } = await auth(); // This is Clerk's userId
+  const { userId } = await appAuth(); // This is Clerk's userId
 
   // Guest users cannot delete chats. Only logged-in users.
   if (!userId) {
@@ -566,4 +578,5 @@ export async function DELETE(request: Request) {
 
   return Response.json(deletedChat, { status: 200 });
 }
+
 

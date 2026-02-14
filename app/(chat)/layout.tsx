@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { DataStreamProvider } from "@/components/data-stream-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { auth } from "@clerk/nextjs/server";
+import { appAuth } from "@/lib/auth/server";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -23,7 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 }
 
 async function SidebarWrapper({ children }: { children: React.ReactNode }) {
-  const { userId } = await auth();
+  const { userId } = await appAuth();
   const cookieStore = await cookies();
   const isCollapsed = cookieStore.get("sidebar_state")?.value !== "true";
 
@@ -34,3 +34,4 @@ async function SidebarWrapper({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+

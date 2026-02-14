@@ -18,6 +18,7 @@ import type { ArtifactKind } from "@/components/artifact";
 import type { VisibilityType } from "@/components/visibility-selector";
 import { ChatSDKError } from "../errors";
 import { generateUUID } from "../utils";
+import { entitlementsByUserType, type UserType } from "@/lib/ai/entitlements";
 import {
   type Chat,
   chat,
@@ -54,6 +55,16 @@ function getDb() {
   return db;
 }
 
+const getDailyCreditsByUserType = (userType: UserType): number => {
+  const value = entitlementsByUserType[userType].dailyCredits;
+  return Number.isFinite(value) && value > 0 ? value : 1;
+};
+
+const isSameUtcDay = (left: Date, right: Date) =>
+  left.getUTCFullYear() === right.getUTCFullYear() &&
+  left.getUTCMonth() === right.getUTCMonth() &&
+  left.getUTCDate() === right.getUTCDate();
+
 export async function getUser(email: string): Promise<User[]> {
   try {
     const db = getDb();
@@ -77,11 +88,18 @@ export async function getUserById(id: string): Promise<User[]> {
   }
 }
 
-export async function getOrCreateUser(id: string, email?: string): Promise<User> {
+export async function getOrCreateUser(
+  id: string,
+  email?: string,
+  options?: { userType?: UserType }
+): Promise<User> {
   const users = await getUserById(id);
   if (users.length > 0) {
     return users[0];
   }
+
+  const userType = options?.userType ?? "regular";
+  const dailyCredits = getDailyCreditsByUserType(userType);
 
   try {
     const db = getDb();
@@ -92,6 +110,8 @@ export async function getOrCreateUser(id: string, email?: string): Promise<User>
       customInstructions: "",
       referenceChatHistory: true,
       referenceMemories: true,
+      dailyCreditsRemaining: dailyCredits,
+      dailyCreditsResetAt: new Date(),
     }).returning();
     return newUser;
   } catch (error) {
@@ -105,6 +125,8 @@ export async function getOrCreateUser(id: string, email?: string): Promise<User>
       referenceChatHistory: true,
       referenceMemories: true,
       password: null,
+      dailyCreditsRemaining: dailyCredits,
+      dailyCreditsResetAt: new Date(),
     } as User;
   }
 }
@@ -133,6 +155,7 @@ export async function createGuestUser() {
   const id = generateUUID(); // Generate ID for guest user
   const email = `guest-${Date.now()}`;
   const password = generateHashedPassword(id); // Use the ID to generate password
+  const dailyCredits = getDailyCreditsByUserType("guest");
 
   try {
     const db = getDb();
@@ -145,6 +168,8 @@ export async function createGuestUser() {
       customInstructions: "",
       referenceChatHistory: true,
       referenceMemories: true,
+      dailyCreditsRemaining: dailyCredits,
+      dailyCreditsResetAt: new Date(),
     }).returning({
       id: user.id,
       email: user.email,
@@ -677,6 +702,153 @@ export async function getMessageCountByUserId({
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to get message count by user id"
+    );
+  }
+}
+
+export async function consumeDailyCreditsByUserId({
+  id,
+  userType,
+  amount,
+}: {
+  id: string;
+  userType: UserType;
+  amount: number;
+}) {
+  try {
+    const db = getDb();
+    const today = new Date();
+    const dailyCredits = getDailyCreditsByUserType(userType);
+
+    return await db.transaction(async (tx: any) => {
+      const [existingUser] = await tx
+        .select({
+          id: user.id,
+          dailyCreditsRemaining: user.dailyCreditsRemaining,
+          dailyCreditsResetAt: user.dailyCreditsResetAt,
+        })
+        .from(user)
+        .where(eq(user.id, id))
+        .limit(1);
+
+      if (!existingUser) {
+        throw new ChatSDKError("not_found:chat", "User not found for credit update");
+      }
+
+      const lastReset =
+        existingUser.dailyCreditsResetAt instanceof Date
+          ? existingUser.dailyCreditsResetAt
+          : new Date(existingUser.dailyCreditsResetAt);
+      const shouldReset = !lastReset || !isSameUtcDay(lastReset, today);
+      const availableBeforeCharge = shouldReset
+        ? dailyCredits
+        : existingUser.dailyCreditsRemaining;
+
+      if (availableBeforeCharge < amount) {
+        if (shouldReset) {
+          await tx
+            .update(user)
+            .set({
+              dailyCreditsRemaining: dailyCredits,
+              dailyCreditsResetAt: today,
+            })
+            .where(eq(user.id, id));
+        }
+
+        return {
+          allowed: false,
+          remainingCredits: availableBeforeCharge,
+          dailyCredits,
+          amount,
+        };
+      }
+
+      const remainingCredits = availableBeforeCharge - amount;
+
+      await tx
+        .update(user)
+        .set({
+          dailyCreditsRemaining: remainingCredits,
+          dailyCreditsResetAt: shouldReset ? today : lastReset,
+        })
+        .where(eq(user.id, id));
+
+      return {
+        allowed: true,
+        remainingCredits,
+        dailyCredits,
+        amount,
+      };
+    });
+  } catch (_error) {
+    if (_error instanceof ChatSDKError) throw _error;
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to consume daily credits by user id"
+    );
+  }
+}
+
+export async function getDailyCreditsStateByUserId({
+  id,
+  userType,
+}: {
+  id: string;
+  userType: UserType;
+}) {
+  try {
+    const db = getDb();
+    const today = new Date();
+    const dailyCredits = getDailyCreditsByUserType(userType);
+
+    return await db.transaction(async (tx: any) => {
+      const [existingUser] = await tx
+        .select({
+          id: user.id,
+          dailyCreditsRemaining: user.dailyCreditsRemaining,
+          dailyCreditsResetAt: user.dailyCreditsResetAt,
+        })
+        .from(user)
+        .where(eq(user.id, id))
+        .limit(1);
+
+      if (!existingUser) {
+        throw new ChatSDKError("not_found:chat", "User not found for credit state");
+      }
+
+      const lastReset =
+        existingUser.dailyCreditsResetAt instanceof Date
+          ? existingUser.dailyCreditsResetAt
+          : new Date(existingUser.dailyCreditsResetAt);
+      const shouldReset = !lastReset || !isSameUtcDay(lastReset, today);
+
+      if (shouldReset) {
+        await tx
+          .update(user)
+          .set({
+            dailyCreditsRemaining: dailyCredits,
+            dailyCreditsResetAt: today,
+          })
+          .where(eq(user.id, id));
+
+        return {
+          remainingCredits: dailyCredits,
+          dailyCredits,
+          resetAt: today,
+        };
+      }
+
+      return {
+        remainingCredits: existingUser.dailyCreditsRemaining,
+        dailyCredits,
+        resetAt: lastReset,
+      };
+    });
+  } catch (_error) {
+    if (_error instanceof ChatSDKError) throw _error;
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get daily credits state by user id"
     );
   }
 }

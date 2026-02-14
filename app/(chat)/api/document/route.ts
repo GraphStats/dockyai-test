@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { appAuth } from "@/lib/auth/server";
 import type { ArtifactKind } from "@/components/artifact";
 import {
   deleteDocumentsByIdAfterTimestamp,
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     ).toResponse();
   }
 
-  const { userId } = await auth();
+  const { userId } = await appAuth();
 
   if (!userId) {
     return new ChatSDKError("unauthorized:document").toResponse();
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     ).toResponse();
   }
 
-  const { userId } = await auth();
+  const { userId } = await appAuth();
 
   if (!userId) {
     return new ChatSDKError("unauthorized:document").toResponse();
@@ -107,7 +107,7 @@ export async function DELETE(request: Request) {
     ).toResponse();
   }
 
-  const { userId } = await auth();
+  const { userId } = await appAuth();
 
   if (!userId) {
     return new ChatSDKError("unauthorized:document").toResponse();
@@ -128,3 +128,4 @@ export async function DELETE(request: Request) {
 
   return Response.json(documentsDeleted, { status: 200 });
 }
+

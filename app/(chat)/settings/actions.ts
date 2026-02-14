@@ -1,11 +1,11 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { appAuth } from "@/lib/auth/server";
 import { getOrCreateUser, updateUserById } from "@/lib/db/queries";
 import { revalidatePath } from "next/cache";
 
 export async function updateUserSettings(formData: FormData) {
-  const { userId } = await auth();
+  const { userId } = await appAuth();
   if (!userId) {
     throw new Error("Unauthorized");
   }
@@ -31,7 +31,7 @@ export async function updateUserSettings(formData: FormData) {
 }
 
 export async function getUserSettings() {
-  const { userId } = await auth();
+  const { userId } = await appAuth();
   if (!userId) {
     return {
       customInstructions: "",
@@ -60,3 +60,4 @@ export async function getUserSettings() {
     };
   }
 }
+

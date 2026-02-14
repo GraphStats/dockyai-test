@@ -7,6 +7,7 @@ export type ChatModel = {
   name: string;
   provider: string;
   description: string;
+  creditCost: number;
 };
 
 export const chatModels: ChatModel[] = [
@@ -14,57 +15,93 @@ export const chatModels: ChatModel[] = [
     id: AUTO_MODEL_ID,
     name: "Auto",
     provider: "auto",
-    description: "Choisit automatiquement le meilleur modèle pour la requête.",
+    description: "Choisit automatiquement le meilleur modele pour la requete.",
+    creditCost: 0,
   },
   {
     id: "openai/gpt-oss-120b",
     name: "GPT-4",
     provider: "OpenAI",
-    description: "For powerful reasoning, agentic tasks, and versatile developer use cases."
+    description:
+      "For powerful reasoning, agentic tasks, and versatile developer use cases.",
+    creditCost: 6,
   },
   {
     id: "google/gemma-3-27b-it",
     name: "Gemma 3",
     provider: "Google",
-    description: "Gemma is a family of lightweight, state-of-the-art open models from Google"
+    description:
+      "Gemma is a family of lightweight, state-of-the-art open models from Google",
+    creditCost: 2,
   },
   {
     id: "Qwen/Qwen3-Next-80B-A3B-Instruct",
     name: "Qwen 3 Next",
     provider: "Alibaba",
-    description: "The best model of Qwen!"
+    description: "The best model of Qwen!",
+    creditCost: 5,
   },
   {
     id: "Qwen/Qwen3-Coder-30B-A3B-Instruct",
     name: "Qwen 3 Coder",
     provider: "Alibaba",
     description: "Optimized for coding tasks",
+    creditCost: 3,
   },
   {
     id: "zai-org/GLM-4.7",
     name: "GLM 4.7",
     provider: "zAI",
     description: "Enhanced version of GLM-4.7",
+    creditCost: 6,
   },
   {
     id: "zai-org/GLM-4.7-Flash",
     name: "GLM 4.7 Flash",
     provider: "zAI",
     description: "A powerful multilingual model",
+    creditCost: 2,
   },
   {
     id: "moonshotai/Kimi-K2-Instruct",
     name: "Kimi K2",
     provider: "Moonshot",
     description: "Kimi K2 from Moonshot AI.",
+    creditCost: 8,
   },
   {
     id: "meta-llama/Meta-Llama-3-8B-Instruct",
     name: "Llama 3",
     provider: "Meta",
-    description: "The Meta Llama 3 collection of multilingual large language models"
+    description:
+      "The Meta Llama 3 collection of multilingual large language models",
+    creditCost: 1,
   },
 ];
+
+const modelCreditFallbackById: Record<string, number> = {
+  "meta-llama/Llama-3.1-8B-Instruct": 1,
+  "meta-llama/Llama-3.1-70B-Instruct": 5,
+  "meta-llama/Llama-3.2-3B-Instruct": 1,
+  "Qwen/Qwen2.5-72B-Instruct": 5,
+  "Qwen/Qwen2.5-7B-Instruct": 1,
+  "Qwen/Qwen2.5-Coder-32B-Instruct": 3,
+  "Qwen/Qwen2.5-VL-72B-Instruct": 5,
+  "moonshotai/Kimi-K2.5": 8,
+};
+
+export const getModelCreditCost = (modelId: string): number => {
+  if (modelId === AUTO_MODEL_ID) {
+    return 0;
+  }
+
+  const selectedModel = chatModels.find((model) => model.id === modelId);
+  if (selectedModel) {
+    return selectedModel.creditCost;
+  }
+
+  return modelCreditFallbackById[modelId] ?? 2;
+};
 
 /**
  * Some Hugging Face hosted models still do not reliably support tool-calling

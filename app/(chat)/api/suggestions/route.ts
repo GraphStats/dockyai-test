@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { appAuth } from "@/lib/auth/server";
 import { getSuggestionsByDocumentId } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     ).toResponse();
   }
 
-  const { userId } = await auth();
+  const { userId } = await appAuth();
 
   if (!userId) {
     return new ChatSDKError("unauthorized:suggestions").toResponse();
@@ -35,3 +35,4 @@ export async function GET(request: Request) {
 
   return Response.json(suggestions, { status: 200 });
 }
+

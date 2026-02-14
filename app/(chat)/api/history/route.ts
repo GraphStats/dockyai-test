@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { appAuth } from "@/lib/auth/server";
 import { deleteAllChatsByUserId, getChatsByUserId } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 import { cookies } from "next/headers"; // Import cookies
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     ).toResponse();
   }
 
-  const { userId: clerkUserId } = await auth(); // Rename to clerkUserId
+  const { userId: clerkUserId } = await appAuth(); // Rename to clerkUserId
   let currentUserId: string | null = null;
 
   if (clerkUserId) {
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE() {
-  const { userId } = await auth();
+  const { userId } = await appAuth();
 
   if (!userId) {
     return new ChatSDKError("unauthorized:chat").toResponse();
@@ -58,3 +58,4 @@ export async function DELETE() {
 
   return Response.json(result, { status: 200 });
 }
+

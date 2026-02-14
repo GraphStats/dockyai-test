@@ -1,7 +1,7 @@
 export type UserType = "guest" | "regular";
 
 type Entitlements = {
-  maxMessagesPerDay: number;
+  dailyCredits: number;
 };
 
 export const entitlementsByUserType: Record<UserType, Entitlements> = {
@@ -9,14 +9,14 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    * For users without an account
    */
   guest: {
-    maxMessagesPerDay: 10,
+    dailyCredits: Number(process.env.GUEST_DAILY_CREDITS ?? 40),
   },
 
   /*
    * For users with an account
    */
   regular: {
-    maxMessagesPerDay: 50,
+    dailyCredits: Number(process.env.REGULAR_DAILY_CREDITS ?? 120),
   },
 
   /*

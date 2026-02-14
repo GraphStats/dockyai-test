@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useAppUser } from "@/lib/auth/client";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
@@ -13,6 +13,7 @@ import {
   SidebarHistory,
 } from "@/components/sidebar-history";
 import { SidebarUserNav } from "@/components/sidebar-user-nav";
+import { CreditsCard } from "@/components/credits-card";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -35,7 +36,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export function AppSidebar() {
-  const { user } = useUser();
+  const { user } = useAppUser();
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
   const { mutate } = useSWRConfig();
@@ -121,6 +122,7 @@ export function AppSidebar() {
           <SidebarHistory />
         </SidebarContent>
         <SidebarFooter>
+          <CreditsCard />
           {user ? (
             <SidebarUserNav />
           ) : (
@@ -163,3 +165,4 @@ export function AppSidebar() {
     </>
   );
 }
+

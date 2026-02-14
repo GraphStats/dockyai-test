@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import { AppClerkProvider } from "@/lib/auth/client";
 
 const AFTER_SIGN_IN_URL =
   process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL ?? "/chat";
@@ -91,15 +91,16 @@ export default function RootLayout({
           enableSystem
         >
           <Toaster position="top-center" />
-          <ClerkProvider
+          <AppClerkProvider
             signInFallbackRedirectUrl={AFTER_SIGN_IN_URL}
             signUpFallbackRedirectUrl={AFTER_SIGN_UP_URL}
             afterSignOutUrl={AFTER_SIGN_OUT_URL}
           >
             {children}
-          </ClerkProvider>
+          </AppClerkProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+

@@ -1,9 +1,9 @@
-import { SignUp } from "@clerk/nextjs";
+import { AppSignUp } from "@/lib/auth/client";
 
 export default function Page() {
   return (
     <div className="flex h-dvh w-screen items-center justify-center bg-background">
-      <SignUp 
+      <AppSignUp 
         appearance={{
           elements: {
             formButtonPrimary: "bg-primary text-primary-foreground hover:bg-primary/90",
@@ -14,3 +14,4 @@ export default function Page() {
     </div>
   );
 }
+
