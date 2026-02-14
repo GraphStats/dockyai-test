@@ -228,7 +228,7 @@ function PureMultimodalInput({
       className={cn("relative flex w-full flex-col gap-4", className)}
     >
       <PromptInput
-        className="rounded-2xl border border-white/10 bg-zinc-900/60 p-2 shadow-lg transition-all duration-200 focus-within:border-white/20 hover:border-white/20"
+        className="rounded-2xl border border-border bg-card p-2 shadow-sm transition-all duration-200 hover:border-muted-foreground/40 focus-within:border-primary/30 dark:border-white/10 dark:bg-zinc-900/60 dark:shadow-lg dark:hover:border-white/20 dark:focus-within:border-white/20"
         onSubmit={(event) => {
           event.preventDefault();
           if (!input.trim()) {
@@ -241,15 +241,15 @@ function PureMultimodalInput({
           }
         }}
       >
-        <div className="px-2 pb-1 text-zinc-300 text-sm">
+        <div className="px-2 pb-1 text-muted-foreground text-sm dark:text-zinc-300">
           Ce mois-ci, DockyAI a ete enormement utilise, les prix ont ete
           augmentes de 30% sur chaque modele.
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-zinc-950/70">
+        <div className="rounded-xl border border-border/70 bg-background dark:border-white/10 dark:bg-zinc-950/70">
           <div className="flex flex-row items-start gap-1 px-3 pt-3 sm:gap-2">
             <PromptInputTextarea
-              className="grow resize-none border-0! border-none! bg-transparent p-2 text-zinc-100 text-base outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+              className="grow resize-none border-0! border-none! bg-transparent p-2 text-foreground text-base outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground dark:text-zinc-100 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
               data-testid="multimodal-input"
               disableAutoResize={true}
               maxHeight={200}
@@ -359,7 +359,7 @@ function PureModelSelectorCompact({
   return (
     <ModelSelector onOpenChange={setOpen} open={open}>
       <ModelSelectorTrigger asChild>
-        <Button className="h-7 w-auto justify-start gap-2 px-2 text-zinc-100" variant="ghost">
+        <Button className="h-7 w-auto justify-start gap-2 px-2 text-foreground dark:text-zinc-100" variant="ghost">
           {provider && <ModelSelectorLogo provider={provider} />}
           <ModelSelectorName className="text-left">{selectedModel.name}</ModelSelectorName>
         </Button>
