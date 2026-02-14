@@ -24,6 +24,22 @@ export default async function StatsPage() {
     id: currentUserId,
     userType,
   });
+  const now = new Date();
+  const nextResetUtc = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + 1,
+      0,
+      0,
+      0
+    )
+  );
+  const remainingMs = Math.max(0, nextResetUtc.getTime() - now.getTime());
+  const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+  const remainingMinutes = Math.floor(
+    (remainingMs % (1000 * 60 * 60)) / (1000 * 60)
+  );
 
   return (
     <div className="container max-w-4xl space-y-6 px-4 py-10 md:px-8">
@@ -47,6 +63,12 @@ export default async function StatsPage() {
           </p>
           <p>
             Dernier reset: <span className="font-semibold">{credits.resetAt.toISOString().slice(0, 10)}</span>
+          </p>
+          <p>
+            Prochain reset dans:{" "}
+            <span className="font-semibold">
+              {remainingHours}h {remainingMinutes}m (UTC)
+            </span>
           </p>
         </CardContent>
       </Card>
