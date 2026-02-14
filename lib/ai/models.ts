@@ -53,7 +53,7 @@ export const chatModels: ChatModel[] = [
     name: "GLM 5",
     provider: "zAI",
     description: "Fastest variant of GLM 5.",
-    creditCost: 7,
+    creditCost: 9,
   },
   {
     id: "zai-org/GLM-4.7",
