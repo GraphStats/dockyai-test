@@ -67,11 +67,11 @@ const getMaxBorrowCreditsByUserType = (userType: UserType): number =>
   getDailyCreditsByUserType(userType);
 
 const HF_MONTHLY_BUDGET_EUR = Number(process.env.HF_MONTHLY_BUDGET_EUR ?? 0.1);
-const HF_LOW_CREDIT_THRESHOLD_RATIO = Number(
-  process.env.HF_LOW_CREDIT_THRESHOLD_RATIO ?? 0.2
+const HF_LOW_CREDIT_THRESHOLD_EUR = Number(
+  process.env.HF_LOW_CREDIT_THRESHOLD_EUR ?? 0.04
 );
 const HF_LOW_CREDIT_MULTIPLIER = Number(
-  process.env.HF_LOW_CREDIT_MULTIPLIER ?? 1.2
+  process.env.HF_LOW_CREDIT_MULTIPLIER ?? 1.4
 );
 const HF_COST_PER_COIN_MICROS = Number(process.env.HF_COST_PER_COIN_MICROS ?? 1000);
 
@@ -774,9 +774,7 @@ export async function getHfPricingState() {
     const spentMicros = Number(row?.spentMicros ?? 0);
     const monthlyBudgetMicros = euroToMicros(HF_MONTHLY_BUDGET_EUR);
     const remainingMicros = Math.max(0, monthlyBudgetMicros - spentMicros);
-    const thresholdMicros = Math.floor(
-      monthlyBudgetMicros * HF_LOW_CREDIT_THRESHOLD_RATIO
-    );
+    const thresholdMicros = euroToMicros(HF_LOW_CREDIT_THRESHOLD_EUR);
     const isLowBudget = remainingMicros <= thresholdMicros;
     const activeMultiplier = isLowBudget ? HF_LOW_CREDIT_MULTIPLIER : 1;
 
