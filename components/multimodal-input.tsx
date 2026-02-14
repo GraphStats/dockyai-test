@@ -359,7 +359,7 @@ function PureModelSelectorCompact({
   return (
     <ModelSelector onOpenChange={setOpen} open={open}>
       <ModelSelectorTrigger asChild>
-        <Button className="h-7 w-auto justify-start gap-2 px-1 text-zinc-100" variant="ghost">
+        <Button className="h-7 w-auto justify-start gap-2 px-2 text-zinc-100" variant="ghost">
           {provider && <ModelSelectorLogo provider={provider} />}
           <ModelSelectorName className="text-left">{selectedModel.name}</ModelSelectorName>
         </Button>
