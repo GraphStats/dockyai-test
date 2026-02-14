@@ -140,6 +140,13 @@ export const chatModels: ChatModel[] = [
     creditCost: 3,
   },
   {
+    id: "XiaomiMiMo/MiMo-V2-Flash:fastest",
+    name: "MiMo V2 Flash",
+    provider: "Xiaomi",
+    description: "Fastest variant of MiMo V2 Flash.",
+    creditCost: 3,
+  },
+  {
     id: "mistralai/Mistral-7B-Instruct-v0.2:fastest",
     name: "Mistral 0.2",
     provider: "Mistral",
