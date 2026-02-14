@@ -77,6 +77,13 @@ export const chatModels: ChatModel[] = [
     creditCost: 8,
   },
   {
+    id: "MiniMaxAI/MiniMax-M2.5:fastest",
+    name: "MiniMax M2.5",
+    provider: "MiniMax",
+    description: "Fastest variant of MiniMax M2.5.",
+    creditCost: 7,
+  },
+  {
     id: "meta-llama/Meta-Llama-3-8B-Instruct",
     name: "Llama 3",
     provider: "Meta",
