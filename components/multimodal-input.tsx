@@ -241,19 +241,19 @@ function PureMultimodalInput({
           }
         }}
       >
-        <div className="rounded-xl border border-white/10 bg-zinc-950/70">
-          <div className="border-b border-white/10 px-4 py-2 text-zinc-300 text-sm">
-            Ce mois-ci, DockyAI a ete enormement utilise, les prix ont ete
-            augmentes de 20% sur chaque modele.
-          </div>
+        <div className="px-2 pb-2 text-zinc-300 text-sm">
+          Ce mois-ci, DockyAI a ete enormement utilise, les prix ont ete
+          augmentes de 20% sur chaque modele.
+        </div>
 
-          <div className="flex flex-row items-start gap-1 px-3 pt-2 sm:gap-2">
+        <div className="rounded-xl border border-white/10 bg-zinc-950/70">
+          <div className="flex flex-row items-start gap-1 px-3 pt-3 sm:gap-2">
             <PromptInputTextarea
               className="grow resize-none border-0! border-none! bg-transparent p-2 text-zinc-100 text-base outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
               data-testid="multimodal-input"
               disableAutoResize={true}
               maxHeight={200}
-              minHeight={44}
+              minHeight={88}
               onChange={handleInput}
               placeholder="Send a message..."
               ref={textareaRef}
@@ -261,7 +261,7 @@ function PureMultimodalInput({
               value={input}
             />
           </div>
-          <PromptInputToolbar className="border-top-0! border-t-0! p-2 shadow-none dark:border-0 dark:border-transparent!">
+          <PromptInputToolbar className="border-top-0! border-t-0! p-2 pt-0 shadow-none dark:border-0 dark:border-transparent!">
             <PromptInputTools className="gap-0 sm:gap-0.5">
               <ModelSelectorCompact
                 onModelChange={onModelChange}
@@ -272,15 +272,15 @@ function PureMultimodalInput({
             {status === "submitted" ? (
               <StopButton setMessages={setMessages} stop={stop} />
             ) : (
-              <PromptInputSubmit
-                className="size-8 rounded-full bg-primary text-primary-foreground transition-colors duration-200 hover:bg-primary/90 disabled:opacity-100"
-                data-testid="send-button"
-                disabled={!input.trim()}
-                status={status}
-              >
-                <ArrowUpIcon size={14} />
-              </PromptInputSubmit>
-            )}
+                <PromptInputSubmit
+                  className="size-8 rounded-full bg-primary text-primary-foreground transition-colors duration-200 hover:bg-primary/90 disabled:opacity-100"
+                  data-testid="send-button"
+                  disabled={!input.trim()}
+                  status={status}
+                >
+                  <ArrowUpIcon size={14} />
+                </PromptInputSubmit>
+              )}
           </PromptInputToolbar>
         </div>
       </PromptInput>
@@ -359,9 +359,8 @@ function PureModelSelectorCompact({
   return (
     <ModelSelector onOpenChange={setOpen} open={open}>
       <ModelSelectorTrigger asChild>
-        <Button className="h-8 w-[200px] justify-between px-2" variant="ghost">
-          {provider && <ModelSelectorLogo provider={provider} />}
-          <ModelSelectorName>{selectedModel.name}</ModelSelectorName>
+        <Button className="h-7 w-auto justify-start px-1 text-zinc-100" variant="ghost">
+          <ModelSelectorName className="text-left">{selectedModel.name}</ModelSelectorName>
         </Button>
       </ModelSelectorTrigger>
       <ModelSelectorContent>
