@@ -228,7 +228,7 @@ function PureMultimodalInput({
       className={cn("relative flex w-full flex-col gap-4", className)}
     >
       <PromptInput
-        className="rounded-2xl border border-border bg-card p-2 shadow-sm transition-all duration-200 hover:border-muted-foreground/40 focus-within:border-primary/30 dark:border-white/10 dark:bg-zinc-900/60 dark:shadow-lg dark:hover:border-white/20 dark:focus-within:border-white/20"
+        className="rounded-2xl border border-border bg-card p-2 shadow-none transition-all duration-200 hover:border-muted-foreground/40 focus-within:border-primary/30 dark:border-white/10 dark:bg-zinc-900/60 dark:shadow-lg dark:hover:border-white/20 dark:focus-within:border-white/20"
         onSubmit={(event) => {
           event.preventDefault();
           if (!input.trim()) {
