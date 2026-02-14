@@ -17,7 +17,10 @@ import {
   type RequestHints,
   systemPrompt,
 } from "@/lib/ai/prompts";
-import { getLanguageModel } from "@/lib/ai/providers";
+import {
+  getLanguageModelFallbackChain,
+  hasHuggingFaceApiKeyConfigured,
+} from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
@@ -69,6 +72,24 @@ function getStreamContext() {
 
 export { getStreamContext };
 
+function isHfRetryableError(error: unknown) {
+  const message = (error as { message?: string })?.message?.toLowerCase() ?? "";
+
+  return (
+    message.includes("credit card") ||
+    message.includes("quota") ||
+    message.includes("rate limit") ||
+    message.includes("too many requests") ||
+    message.includes("unauthorized") ||
+    message.includes("forbidden") ||
+    message.includes("status 401") ||
+    message.includes("status 402") ||
+    message.includes("status 403") ||
+    message.includes("status 429") ||
+    message.includes("status 5")
+  );
+}
+
 export async function POST(request: Request) {
   let requestBody: PostRequestBody;
 
@@ -95,10 +116,10 @@ export async function POST(request: Request) {
       ).toResponse();
     }
 
-    if (!process.env.HUGGING_FACE_API_KEY) {
+    if (!hasHuggingFaceApiKeyConfigured()) {
       return new ChatSDKError(
         "bad_request:api",
-        "HUGGING_FACE_API_KEY is missing. Please add it to your environment variables."
+        "No Hugging Face API key configured. Add HUGGING_FACE_API_KEY or HUGGING_FACE_API_KEYS."
       ).toResponse();
     }
 
@@ -375,60 +396,85 @@ export async function POST(request: Request) {
             transient: true,
           });
 
-          const result = await streamText({
-            model: getLanguageModel(effectiveModelId),
-            system:
-              systemPrompt({
-                selectedChatModel: effectiveModelId,
-                requestHints,
-                customInstructions: userData?.customInstructions || undefined,
-                useLocation: userData?.useLocation ?? true,
-                referenceChatHistory: userData?.referenceChatHistory ?? true,
-                referenceMemories: userData?.referenceMemories ?? true,
-              }) +
-              (effectiveModelSupportsTools
-                ? `\n\n${artifactsPrompt}`
-                : "\n\nTools are disabled for this model; respond directly without tool calls."),
-            messages: modelMessages,
-            stopWhen: stepCountIs(5),
-            experimental_activeTools: effectiveModelSupportsTools
-              ? [
-                  "getWeather",
-                  "createDocument",
-                  "updateDocument",
-                  "requestSuggestions",
-                ]
-              : undefined,
-            providerOptions: isReasoningModel
-              ? {
-                  anthropic: {
-                    thinking: { type: "enabled", budgetTokens: 10_000 },
-                  },
-                }
-              : undefined,
-            toolChoice: effectiveModelSupportsTools ? "auto" : "none",
-            tools: effectiveModelSupportsTools
-              ? {
-                  getWeather,
-                  createDocument: createDocument({
-                    userId: currentUserId,
-                    dataStream,
-                  }), // Use currentUserId
-                  updateDocument: updateDocument({
-                    userId: currentUserId,
-                    dataStream,
-                  }), // Use currentUserId
-                  requestSuggestions: requestSuggestions({
-                    userId: currentUserId,
-                    dataStream,
-                  }), // Use currentUserId
-                }
-              : undefined,
-            experimental_telemetry: {
-              isEnabled: isProductionEnvironment,
-              functionId: "stream-text",
-            },
-          });
+          const modelFallbackChain = getLanguageModelFallbackChain(effectiveModelId);
+          if (modelFallbackChain.length === 0) {
+            throw new Error("No HF model clients available");
+          }
+
+          let result: any = null;
+          let lastError: unknown = null;
+
+          for (let i = 0; i < modelFallbackChain.length; i++) {
+            const modelCandidate = modelFallbackChain[i];
+            try {
+              result = await streamText({
+                model: modelCandidate,
+                system:
+                  systemPrompt({
+                    selectedChatModel: effectiveModelId,
+                    requestHints,
+                    customInstructions: userData?.customInstructions || undefined,
+                    useLocation: userData?.useLocation ?? true,
+                    referenceChatHistory: userData?.referenceChatHistory ?? true,
+                    referenceMemories: userData?.referenceMemories ?? true,
+                  }) +
+                  (effectiveModelSupportsTools
+                    ? `\n\n${artifactsPrompt}`
+                    : "\n\nTools are disabled for this model; respond directly without tool calls."),
+                messages: modelMessages,
+                stopWhen: stepCountIs(5),
+                experimental_activeTools: effectiveModelSupportsTools
+                  ? [
+                      "getWeather",
+                      "createDocument",
+                      "updateDocument",
+                      "requestSuggestions",
+                    ]
+                  : undefined,
+                providerOptions: isReasoningModel
+                  ? {
+                      anthropic: {
+                        thinking: { type: "enabled", budgetTokens: 10_000 },
+                      },
+                    }
+                  : undefined,
+                toolChoice: effectiveModelSupportsTools ? "auto" : "none",
+                tools: effectiveModelSupportsTools
+                  ? {
+                      getWeather,
+                      createDocument: createDocument({
+                        userId: currentUserId,
+                        dataStream,
+                      }),
+                      updateDocument: updateDocument({
+                        userId: currentUserId,
+                        dataStream,
+                      }),
+                      requestSuggestions: requestSuggestions({
+                        userId: currentUserId,
+                        dataStream,
+                      }),
+                    }
+                  : undefined,
+                experimental_telemetry: {
+                  isEnabled: isProductionEnvironment,
+                  functionId: "stream-text",
+                },
+              });
+              break;
+            } catch (error) {
+              lastError = error;
+              const canRetry =
+                i < modelFallbackChain.length - 1 && isHfRetryableError(error);
+              if (!canRetry) {
+                throw error;
+              }
+            }
+          }
+
+          if (!result) {
+            throw (lastError ?? new Error("Failed to initialize model stream"));
+          }
 
           // Stream immediately for real-time typing
           dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
