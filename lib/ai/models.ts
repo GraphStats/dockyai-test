@@ -70,6 +70,13 @@ export const chatModels: ChatModel[] = [
     creditCost: 2,
   },
   {
+    id: "zai-org/GLM-4.6V-Flash:fastest",
+    name: "GLM 4.6 Flash",
+    provider: "zAI",
+    description: "Fastest variant of GLM 4.6V Flash.",
+    creditCost: 2,
+  },
+  {
     id: "moonshotai/Kimi-K2.5:fastest",
     name: "Kimi K2.5",
     provider: "Moonshot",
