@@ -65,6 +65,11 @@ const isSameUtcDay = (left: Date, right: Date) =>
   left.getUTCMonth() === right.getUTCMonth() &&
   left.getUTCDate() === right.getUTCDate();
 
+const getUtcDayStart = (date: Date) =>
+  new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  );
+
 export async function getUser(email: string): Promise<User[]> {
   try {
     const db = getDb();
@@ -743,8 +748,44 @@ export async function consumeDailyCreditsByUserId({
       const availableBeforeCharge = shouldReset
         ? dailyCredits
         : existingUser.dailyCreditsRemaining;
+      let bootstrapCreditsApplied = false;
 
-      if (availableBeforeCharge < amount) {
+      // Migration bootstrap: users created before credits rollout can have 0
+      // remaining on the same day despite never sending a message.
+      if (!shouldReset && availableBeforeCharge <= 0) {
+        const utcDayStart = getUtcDayStart(today);
+        const [usage] = await tx
+          .select({ count: count(message.id) })
+          .from(message)
+          .innerJoin(chat, eq(message.chatId, chat.id))
+          .where(
+            and(
+              eq(chat.userId, id),
+              gte(message.createdAt, utcDayStart),
+              eq(message.role, "user")
+            )
+          )
+          .execute();
+
+        const hasUsedCreditsToday = (usage?.count ?? 0) > 0;
+        if (!hasUsedCreditsToday) {
+          await tx
+            .update(user)
+            .set({
+              dailyCreditsRemaining: dailyCredits,
+              dailyCreditsResetAt: today,
+            })
+            .where(eq(user.id, id));
+          bootstrapCreditsApplied = true;
+        }
+      }
+
+      const effectiveAvailableBeforeCharge =
+        bootstrapCreditsApplied
+          ? dailyCredits
+          : availableBeforeCharge;
+
+      if (effectiveAvailableBeforeCharge < amount) {
         if (shouldReset) {
           await tx
             .update(user)
@@ -757,13 +798,13 @@ export async function consumeDailyCreditsByUserId({
 
         return {
           allowed: false,
-          remainingCredits: availableBeforeCharge,
+          remainingCredits: effectiveAvailableBeforeCharge,
           dailyCredits,
           amount,
         };
       }
 
-      const remainingCredits = availableBeforeCharge - amount;
+      const remainingCredits = effectiveAvailableBeforeCharge - amount;
 
       await tx
         .update(user)
@@ -836,6 +877,39 @@ export async function getDailyCreditsStateByUserId({
           dailyCredits,
           resetAt: today,
         };
+      }
+
+      if (existingUser.dailyCreditsRemaining <= 0) {
+        const utcDayStart = getUtcDayStart(today);
+        const [usage] = await tx
+          .select({ count: count(message.id) })
+          .from(message)
+          .innerJoin(chat, eq(message.chatId, chat.id))
+          .where(
+            and(
+              eq(chat.userId, id),
+              gte(message.createdAt, utcDayStart),
+              eq(message.role, "user")
+            )
+          )
+          .execute();
+
+        const hasUsedCreditsToday = (usage?.count ?? 0) > 0;
+        if (!hasUsedCreditsToday) {
+          await tx
+            .update(user)
+            .set({
+              dailyCreditsRemaining: dailyCredits,
+              dailyCreditsResetAt: today,
+            })
+            .where(eq(user.id, id));
+
+          return {
+            remainingCredits: dailyCredits,
+            dailyCredits,
+            resetAt: today,
+          };
+        }
       }
 
       return {
