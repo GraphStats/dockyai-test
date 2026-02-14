@@ -243,7 +243,7 @@ function PureMultimodalInput({
       >
         <div className="px-2 pb-1 text-zinc-300 text-sm">
           Ce mois-ci, DockyAI a ete enormement utilise, les prix ont ete
-          augmentes de 20% sur chaque modele.
+          augmentes de 30% sur chaque modele.
         </div>
 
         <div className="rounded-xl border border-white/10 bg-zinc-950/70">

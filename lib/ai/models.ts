@@ -17,7 +17,7 @@ export const chatModels: ChatModel[] = [
     provider: "OpenAI",
     description:
       "For powerful reasoning, agentic tasks, and versatile developer use cases.",
-    creditCost: 12,
+    creditCost: 14,
   },
   {
     id: "google/gemma-3-27b-it",
@@ -25,91 +25,91 @@ export const chatModels: ChatModel[] = [
     provider: "Google",
     description:
       "Gemma is a family of lightweight, state-of-the-art open models from Google",
-    creditCost: 4,
+    creditCost: 5,
   },
   {
     id: "Qwen/Qwen3-8B:fastest",
     name: "Qwen 3",
     provider: "Alibaba",
     description: "Fastest variant of Qwen 3 8B.",
-    creditCost: 3,
+    creditCost: 4,
   },
   {
     id: "Qwen/Qwen3-Next-80B-A3B-Instruct",
     name: "Qwen 3 Next",
     provider: "Alibaba",
     description: "The best model of Qwen!",
-    creditCost: 5,
+    creditCost: 6,
   },
   {
     id: "Qwen/Qwen3-Coder-30B-A3B-Instruct",
     name: "Qwen 3 Coder",
     provider: "Alibaba",
     description: "Optimized for coding tasks",
-    creditCost: 4,
+    creditCost: 5,
   },
   {
     id: "zai-org/GLM-5:fastest",
     name: "GLM 5",
     provider: "zAI",
     description: "Fastest variant of GLM 5.",
-    creditCost: 5,
+    creditCost: 6,
   },
   {
     id: "zai-org/GLM-4.7",
     name: "GLM 4.7",
     provider: "zAI",
     description: "Enhanced version of GLM-4.7",
-    creditCost: 5,
+    creditCost: 6,
   },
   {
     id: "zai-org/GLM-4.7-Flash",
     name: "GLM 4.7 Flash",
     provider: "zAI",
     description: "A powerful multilingual model",
-    creditCost: 3,
+    creditCost: 4,
   },
   {
     id: "zai-org/GLM-4.6V-Flash:fastest",
     name: "GLM 4.6V Flash",
     provider: "zAI",
     description: "Fastest variant of GLM 4.6V Flash.",
-    creditCost: 2,
+    creditCost: 3,
   },
   {
     id: "moonshotai/Kimi-K2.5:fastest",
     name: "Kimi K2.5",
     provider: "Moonshot",
     description: "Fastest variant of Kimi K2.5.",
-    creditCost: 5,
+    creditCost: 6,
   },
   {
     id: "moonshotai/Kimi-K2-Instruct",
     name: "Kimi K2",
     provider: "Moonshot",
     description: "Kimi K2 from Moonshot AI.",
-    creditCost: 4,
+    creditCost: 5,
   },
   {
     id: "MiniMaxAI/MiniMax-M2.5:fastest",
     name: "MiniMax M2.5",
     provider: "MiniMax",
     description: "Fastest variant of MiniMax M2.5.",
-    creditCost: 3,
+    creditCost: 4,
   },
   {
     id: "meta-llama/Llama-4-Scout-17B-16E-Instruct:fastest",
     name: "Llama 4",
     provider: "Meta",
     description: "Fastest variant of Llama 4 Scout 17B 16E Instruct.",
-    creditCost: 3,
+    creditCost: 4,
   },
   {
     id: "meta-llama/Llama-3.1-8B-Instruct:fastest",
     name: "Llama 3.1",
     provider: "Meta",
     description: "Fastest variant of Llama 3.1 8B Instruct.",
-    creditCost: 2,
+    creditCost: 3,
   },
   {
     id: "meta-llama/Meta-Llama-3-8B-Instruct",
@@ -117,19 +117,19 @@ export const chatModels: ChatModel[] = [
     provider: "Meta",
     description:
       "The Meta Llama 3 collection of multilingual large language models",
-    creditCost: 2,
+    creditCost: 3,
   },
 ];
 
 const modelCreditFallbackById: Record<string, number> = {
-  "meta-llama/Llama-3.1-8B-Instruct": 2,
-  "meta-llama/Llama-3.1-70B-Instruct": 8,
-  "meta-llama/Llama-3.2-3B-Instruct": 2,
-  "Qwen/Qwen2.5-72B-Instruct": 5,
-  "Qwen/Qwen2.5-7B-Instruct": 2,
-  "Qwen/Qwen2.5-Coder-32B-Instruct": 4,
-  "Qwen/Qwen2.5-VL-72B-Instruct": 5,
-  "moonshotai/Kimi-K2.5": 5,
+  "meta-llama/Llama-3.1-8B-Instruct": 3,
+  "meta-llama/Llama-3.1-70B-Instruct": 9,
+  "meta-llama/Llama-3.2-3B-Instruct": 3,
+  "Qwen/Qwen2.5-72B-Instruct": 6,
+  "Qwen/Qwen2.5-7B-Instruct": 3,
+  "Qwen/Qwen2.5-Coder-32B-Instruct": 5,
+  "Qwen/Qwen2.5-VL-72B-Instruct": 6,
+  "moonshotai/Kimi-K2.5": 6,
 };
 
 export const getModelCreditCost = (modelId: string): number => {
@@ -142,7 +142,7 @@ export const getModelCreditCost = (modelId: string): number => {
     return selectedModel.creditCost;
   }
 
-  return modelCreditFallbackById[modelId] ?? 3;
+  return modelCreditFallbackById[modelId] ?? 4;
 };
 
 export const getEffectiveModelCreditCost = ({
