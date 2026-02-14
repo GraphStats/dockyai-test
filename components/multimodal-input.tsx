@@ -228,7 +228,7 @@ function PureMultimodalInput({
       className={cn("relative flex w-full flex-col gap-4", className)}
     >
       <PromptInput
-        className="rounded-2xl border border-white/10 bg-zinc-900/60 p-3 shadow-lg transition-all duration-200 focus-within:border-white/20 hover:border-white/20"
+        className="rounded-2xl border border-white/10 bg-zinc-900/60 p-2 shadow-lg transition-all duration-200 focus-within:border-white/20 hover:border-white/20"
         onSubmit={(event) => {
           event.preventDefault();
           if (!input.trim()) {
@@ -241,7 +241,7 @@ function PureMultimodalInput({
           }
         }}
       >
-        <div className="px-2 pb-2 text-zinc-300 text-sm">
+        <div className="px-2 pb-1 text-zinc-300 text-sm">
           Ce mois-ci, DockyAI a ete enormement utilise, les prix ont ete
           augmentes de 20% sur chaque modele.
         </div>
@@ -359,7 +359,8 @@ function PureModelSelectorCompact({
   return (
     <ModelSelector onOpenChange={setOpen} open={open}>
       <ModelSelectorTrigger asChild>
-        <Button className="h-7 w-auto justify-start px-1 text-zinc-100" variant="ghost">
+        <Button className="h-7 w-auto justify-start gap-2 px-1 text-zinc-100" variant="ghost">
+          {provider && <ModelSelectorLogo provider={provider} />}
           <ModelSelectorName className="text-left">{selectedModel.name}</ModelSelectorName>
         </Button>
       </ModelSelectorTrigger>
