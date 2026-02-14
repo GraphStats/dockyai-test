@@ -12,13 +12,6 @@ export type ChatModel = {
 
 export const chatModels: ChatModel[] = [
   {
-    id: AUTO_MODEL_ID,
-    name: "Auto",
-    provider: "auto",
-    description: "Choisit automatiquement le meilleur modele pour la requete.",
-    creditCost: 0,
-  },
-  {
     id: "openai/gpt-oss-120b",
     name: "GPT-4",
     provider: "OpenAI",
