@@ -63,6 +63,13 @@ export const chatModels: ChatModel[] = [
     creditCost: 2,
   },
   {
+    id: "moonshotai/Kimi-K2.5:fastest",
+    name: "Kimi K2.5",
+    provider: "Moonshot",
+    description: "Fastest variant of Kimi K2.5.",
+    creditCost: 12,
+  },
+  {
     id: "moonshotai/Kimi-K2-Instruct",
     name: "Kimi K2",
     provider: "Moonshot",
