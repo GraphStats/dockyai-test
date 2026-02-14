@@ -84,6 +84,13 @@ export const chatModels: ChatModel[] = [
     creditCost: 7,
   },
   {
+    id: "meta-llama/Llama-3.1-8B-Instruct:fastest",
+    name: "Llama 3.1",
+    provider: "Meta",
+    description: "Fastest variant of Llama 3.1 8B Instruct.",
+    creditCost: 2,
+  },
+  {
     id: "meta-llama/Meta-Llama-3-8B-Instruct",
     name: "Llama 3",
     provider: "Meta",
