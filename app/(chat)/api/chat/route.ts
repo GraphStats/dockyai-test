@@ -26,7 +26,7 @@ import { isProductionEnvironment } from "@/lib/constants";
 import {
   AUTO_MODEL_ID,
   DEFAULT_CHAT_MODEL,
-  getModelCreditCost,
+  getEffectiveModelCreditCost,
   supportsTools,
   chatModels,
   visionSupportedModelIds,
@@ -36,8 +36,10 @@ import {
   createStreamId,
   deleteChatById,
   getChatById,
+  getHfPricingState,
   getMessagesByChatId,
   getOrCreateUser,
+  logModelUsage,
   saveChat,
   saveMessages,
   updateChatTitleById,
@@ -307,7 +309,11 @@ export async function POST(request: Request) {
     }
 
     if (!isToolApprovalFlow && message?.role === "user") {
-      const creditsToConsume = getModelCreditCost(effectiveModelId);
+      const hfPricingState = await getHfPricingState();
+      const creditsToConsume = getEffectiveModelCreditCost({
+        modelId: effectiveModelId,
+        multiplier: hfPricingState.activeMultiplier,
+      });
       const creditsResult = await consumeDailyCreditsByUserId({
         id: currentUserId,
         userType,
@@ -320,6 +326,12 @@ export async function POST(request: Request) {
           `Insufficient credits: ${creditsResult.remainingCredits}/${creditsResult.dailyCredits} available, requires ${creditsToConsume}. Borrow available: ${creditsResult.borrowAvailable ?? 0}`
         ).toResponse();
       }
+
+      await logModelUsage({
+        userId: currentUserId,
+        modelId: effectiveModelId,
+        coinsCharged: creditsToConsume,
+      });
 
       await saveMessages({
         messages: [

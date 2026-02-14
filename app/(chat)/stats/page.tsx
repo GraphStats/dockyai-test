@@ -2,7 +2,11 @@ import { appAuth } from "@/lib/auth/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { chatModels } from "@/lib/ai/models";
-import { getDailyCreditsStateByUserId, getOrCreateUser } from "@/lib/db/queries";
+import {
+  getDailyCreditsStateByUserId,
+  getHfPricingState,
+  getOrCreateUser,
+} from "@/lib/db/queries";
 import { borrowFromTomorrow } from "./actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,6 +31,7 @@ export default async function StatsPage() {
     id: currentUserId,
     userType,
   });
+  const hfPricing = await getHfPricingState();
   const borrowedFromTomorrow = credits.borrowedCreditsOutstanding;
   const borrowAvailable = Math.max(
     0,
@@ -83,6 +88,22 @@ export default async function StatsPage() {
             <span className="font-semibold">
               {remainingHours}h {remainingMinutes}m (UTC)
             </span>
+          </p>
+          <p>
+            Budget HF estime (mois):{" "}
+            <span className="font-semibold">
+              {(hfPricing.monthlyBudgetMicros / 1_000_000).toFixed(2)} EUR
+            </span>
+          </p>
+          <p>
+            Restant HF estime:{" "}
+            <span className="font-semibold">
+              {(hfPricing.remainingMicros / 1_000_000).toFixed(4)} EUR
+            </span>
+          </p>
+          <p>
+            Multiplicateur actif:{" "}
+            <span className="font-semibold">x{hfPricing.activeMultiplier.toFixed(2)}</span>
           </p>
           <form action={borrowFromTomorrow} className="flex items-end gap-2 pt-2">
             <div className="flex-1">

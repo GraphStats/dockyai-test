@@ -145,6 +145,18 @@ export const getModelCreditCost = (modelId: string): number => {
   return modelCreditFallbackById[modelId] ?? 2;
 };
 
+export const getEffectiveModelCreditCost = ({
+  modelId,
+  multiplier,
+}: {
+  modelId: string;
+  multiplier: number;
+}) => {
+  const baseCost = getModelCreditCost(modelId);
+  const safeMultiplier = Number.isFinite(multiplier) && multiplier > 0 ? multiplier : 1;
+  return Math.max(1, Math.ceil(baseCost * safeMultiplier));
+};
+
 /**
  * Some Hugging Face hosted models still do not reliably support tool-calling
  */

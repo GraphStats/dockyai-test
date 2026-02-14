@@ -4,6 +4,7 @@ import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import {
   createGuestUser,
   getDailyCreditsStateByUserId,
+  getHfPricingState,
   getOrCreateUser,
 } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
@@ -48,12 +49,14 @@ export async function GET() {
       id: currentUserId,
       userType,
     });
+    const hfPricingState = await getHfPricingState();
 
     return Response.json({
       userType,
       remainingCredits: creditState.remainingCredits,
       dailyCredits: creditState.dailyCredits,
       resetAt: creditState.resetAt.toISOString(),
+      hfPricingState,
     });
   } catch (error) {
     console.error("Failed to load credits state, using fallback:", error);

@@ -138,6 +138,19 @@ export const stream = pgTable("Stream", {
 
 export type Stream = InferSelectModel<typeof stream>;
 
+export const modelUsageLedger = pgTable("ModelUsageLedger", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: varchar("userId", { length: 255 })
+    .notNull()
+    .references(() => user.id),
+  modelId: varchar("modelId", { length: 255 }).notNull(),
+  coinsCharged: integer("coinsCharged").notNull(),
+  hfCostMicrosEur: integer("hfCostMicrosEur").notNull().default(0),
+  createdAt: timestamp("createdAt").notNull(),
+});
+
+export type ModelUsageLedger = InferSelectModel<typeof modelUsageLedger>;
+
 // Legacy / Deprecated tables kept for migration safety if needed, but updated types
 export const messageDeprecated = pgTable("Message", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),

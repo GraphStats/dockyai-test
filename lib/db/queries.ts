@@ -10,6 +10,7 @@ import {
   gte,
   inArray,
   lt,
+  sql,
   type SQL,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -25,6 +26,7 @@ import {
   type DBMessage,
   document,
   message,
+  modelUsageLedger,
   type Suggestion,
   stream,
   suggestion,
@@ -63,6 +65,17 @@ const getDailyCreditsByUserType = (userType: UserType): number => {
 // "Day of Day": allow borrowing up to one full day of credits from tomorrow.
 const getMaxBorrowCreditsByUserType = (userType: UserType): number =>
   getDailyCreditsByUserType(userType);
+
+const HF_MONTHLY_BUDGET_EUR = Number(process.env.HF_MONTHLY_BUDGET_EUR ?? 0.1);
+const HF_LOW_CREDIT_THRESHOLD_RATIO = Number(
+  process.env.HF_LOW_CREDIT_THRESHOLD_RATIO ?? 0.2
+);
+const HF_LOW_CREDIT_MULTIPLIER = Number(
+  process.env.HF_LOW_CREDIT_MULTIPLIER ?? 1.2
+);
+const HF_COST_PER_COIN_MICROS = Number(process.env.HF_COST_PER_COIN_MICROS ?? 1000);
+
+const euroToMicros = (value: number) => Math.max(0, Math.floor(value * 1_000_000));
 
 const isSameUtcDay = (left: Date, right: Date) =>
   left.getUTCFullYear() === right.getUTCFullYear() &&
@@ -740,6 +753,77 @@ export async function getMessageCountByUserId({
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to get message count by user id"
+    );
+  }
+}
+
+export async function getHfPricingState() {
+  try {
+    const db = getDb();
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+
+    const [row] = await db
+      .select({
+        spentMicros: sql<number>`coalesce(sum(${modelUsageLedger.hfCostMicrosEur}), 0)`,
+      })
+      .from(modelUsageLedger)
+      .where(gte(modelUsageLedger.createdAt, monthStart))
+      .execute();
+
+    const spentMicros = Number(row?.spentMicros ?? 0);
+    const monthlyBudgetMicros = euroToMicros(HF_MONTHLY_BUDGET_EUR);
+    const remainingMicros = Math.max(0, monthlyBudgetMicros - spentMicros);
+    const thresholdMicros = Math.floor(
+      monthlyBudgetMicros * HF_LOW_CREDIT_THRESHOLD_RATIO
+    );
+    const isLowBudget = remainingMicros <= thresholdMicros;
+    const activeMultiplier = isLowBudget ? HF_LOW_CREDIT_MULTIPLIER : 1;
+
+    return {
+      spentMicros,
+      remainingMicros,
+      monthlyBudgetMicros,
+      thresholdMicros,
+      isLowBudget,
+      activeMultiplier,
+    };
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get HF pricing state"
+    );
+  }
+}
+
+export async function logModelUsage({
+  userId,
+  modelId,
+  coinsCharged,
+}: {
+  userId: string;
+  modelId: string;
+  coinsCharged: number;
+}) {
+  try {
+    const db = getDb();
+    const safeCoins = Math.max(0, Math.floor(coinsCharged));
+    const hfCostMicrosEur = Math.max(
+      0,
+      Math.floor(safeCoins * HF_COST_PER_COIN_MICROS)
+    );
+
+    return await db.insert(modelUsageLedger).values({
+      userId,
+      modelId,
+      coinsCharged: safeCoins,
+      hfCostMicrosEur,
+      createdAt: new Date(),
+    });
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to log model usage"
     );
   }
 }
