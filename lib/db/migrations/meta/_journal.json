@@ -99,6 +99,13 @@
       "when": 1771092000000,
       "tag": "0013_daily_credits",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1771095600000,
+      "tag": "0014_borrowed_credits",
+      "breakpoints": true
     }
   ]
 }

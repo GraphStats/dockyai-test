@@ -33,7 +33,7 @@ export function CreditsCard() {
     }
   );
 
-  const remaining = data?.remainingCredits ?? 0;
+  const remaining = Math.max(0, data?.remainingCredits ?? 0);
   const total = data?.dailyCredits ?? 0;
 
   return (

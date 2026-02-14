@@ -3,7 +3,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { chatModels } from "@/lib/ai/models";
 import { getDailyCreditsStateByUserId, getOrCreateUser } from "@/lib/db/queries";
+import { borrowFromTomorrow } from "./actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const GUEST_ID_COOKIE_NAME = "guest_user_id";
 
@@ -24,6 +27,11 @@ export default async function StatsPage() {
     id: currentUserId,
     userType,
   });
+  const borrowedFromTomorrow = credits.borrowedCreditsOutstanding;
+  const borrowAvailable = Math.max(
+    0,
+    credits.maxBorrowCredits - borrowedFromTomorrow
+  );
   const now = new Date();
   const nextResetUtc = new Date(
     Date.UTC(
@@ -44,7 +52,7 @@ export default async function StatsPage() {
   return (
     <div className="container max-w-4xl space-y-6 px-4 py-10 md:px-8">
       <div>
-        <h1 className="font-bold text-3xl tracking-tight">Stats credits</h1>
+        <h1 className="font-bold text-3xl tracking-tight">Coints</h1>
         <p className="text-muted-foreground text-sm">
           Suivi des credits et couts par modele.
         </p>
@@ -59,6 +67,12 @@ export default async function StatsPage() {
             Restants: <span className="font-semibold">{credits.remainingCredits}</span> / {credits.dailyCredits}
           </p>
           <p>
+            Emprunt sur demain: <span className="font-semibold">{borrowedFromTomorrow}</span> / {credits.maxBorrowCredits}
+          </p>
+          <p>
+            Emprunt disponible: <span className="font-semibold">{borrowAvailable}</span>
+          </p>
+          <p>
             Type de compte: <span className="font-semibold">{userType}</span>
           </p>
           <p>
@@ -70,6 +84,24 @@ export default async function StatsPage() {
               {remainingHours}h {remainingMinutes}m (UTC)
             </span>
           </p>
+          <form action={borrowFromTomorrow} className="flex items-end gap-2 pt-2">
+            <div className="flex-1">
+              <label className="mb-1 block text-xs text-muted-foreground" htmlFor="borrow-amount">
+                Prendre sur demain
+              </label>
+              <Input
+                defaultValue={Math.min(10, Math.max(1, borrowAvailable || 1))}
+                id="borrow-amount"
+                max={Math.max(1, borrowAvailable)}
+                min={1}
+                name="amount"
+                type="number"
+              />
+            </div>
+            <Button disabled={borrowAvailable <= 0} type="submit">
+              Prendre
+            </Button>
+          </form>
         </CardContent>
       </Card>
 

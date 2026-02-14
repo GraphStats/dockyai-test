@@ -317,7 +317,7 @@ export async function POST(request: Request) {
       if (!creditsResult.allowed) {
         return new ChatSDKError(
           "rate_limit:chat",
-          `Insufficient credits: ${creditsResult.remainingCredits}/${creditsResult.dailyCredits} available, requires ${creditsToConsume}`
+          `Insufficient credits: ${creditsResult.remainingCredits}/${creditsResult.dailyCredits} available, requires ${creditsToConsume}. Borrow available: ${creditsResult.borrowAvailable ?? 0}`
         ).toResponse();
       }
 

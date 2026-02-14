@@ -21,6 +21,9 @@ export const user = pgTable("User", {
   referenceChatHistory: boolean("referenceChatHistory").default(true),
   referenceMemories: boolean("referenceMemories").default(true),
   dailyCreditsRemaining: integer("dailyCreditsRemaining").notNull().default(0),
+  borrowedCreditsOutstanding: integer("borrowedCreditsOutstanding")
+    .notNull()
+    .default(0),
   dailyCreditsResetAt: timestamp("dailyCreditsResetAt")
     .notNull()
     .defaultNow(),

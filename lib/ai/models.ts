@@ -49,6 +49,13 @@ export const chatModels: ChatModel[] = [
     creditCost: 3,
   },
   {
+    id: "zai-org/GLM-5:fastest",
+    name: "GLM 5",
+    provider: "zAI",
+    description: "Fastest variant of GLM 5.",
+    creditCost: 7,
+  },
+  {
     id: "zai-org/GLM-4.7",
     name: "GLM 4.7",
     provider: "zAI",

@@ -60,6 +60,10 @@ const getDailyCreditsByUserType = (userType: UserType): number => {
   return Number.isFinite(value) && value > 0 ? value : 1;
 };
 
+// "Day of Day": allow borrowing up to one full day of credits from tomorrow.
+const getMaxBorrowCreditsByUserType = (userType: UserType): number =>
+  getDailyCreditsByUserType(userType);
+
 const isSameUtcDay = (left: Date, right: Date) =>
   left.getUTCFullYear() === right.getUTCFullYear() &&
   left.getUTCMonth() === right.getUTCMonth() &&
@@ -69,6 +73,32 @@ const getUtcDayStart = (date: Date) =>
   new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
   );
+
+const applyDailyCreditsReset = async ({
+  tx,
+  userId,
+  dailyCredits,
+  borrowedCreditsOutstanding,
+  now,
+}: {
+  tx: any;
+  userId: string;
+  dailyCredits: number;
+  borrowedCreditsOutstanding: number;
+  now: Date;
+}) => {
+  const creditsAfterDebt = Math.max(0, dailyCredits - borrowedCreditsOutstanding);
+  await tx
+    .update(user)
+    .set({
+      dailyCreditsRemaining: creditsAfterDebt,
+      borrowedCreditsOutstanding: 0,
+      dailyCreditsResetAt: now,
+    })
+    .where(eq(user.id, userId));
+
+  return creditsAfterDebt;
+};
 
 export async function getUser(email: string): Promise<User[]> {
   try {
@@ -116,6 +146,7 @@ export async function getOrCreateUser(
       referenceChatHistory: true,
       referenceMemories: true,
       dailyCreditsRemaining: dailyCredits,
+      borrowedCreditsOutstanding: 0,
       dailyCreditsResetAt: new Date(),
     }).returning();
     return newUser;
@@ -131,6 +162,7 @@ export async function getOrCreateUser(
       referenceMemories: true,
       password: null,
       dailyCreditsRemaining: dailyCredits,
+      borrowedCreditsOutstanding: 0,
       dailyCreditsResetAt: new Date(),
     } as User;
   }
@@ -174,6 +206,7 @@ export async function createGuestUser() {
       referenceChatHistory: true,
       referenceMemories: true,
       dailyCreditsRemaining: dailyCredits,
+      borrowedCreditsOutstanding: 0,
       dailyCreditsResetAt: new Date(),
     }).returning({
       id: user.id,
@@ -724,12 +757,14 @@ export async function consumeDailyCreditsByUserId({
     const db = getDb();
     const today = new Date();
     const dailyCredits = getDailyCreditsByUserType(userType);
+    const maxBorrowCredits = getMaxBorrowCreditsByUserType(userType);
 
     return await db.transaction(async (tx: any) => {
       const [existingUser] = await tx
         .select({
           id: user.id,
           dailyCreditsRemaining: user.dailyCreditsRemaining,
+          borrowedCreditsOutstanding: user.borrowedCreditsOutstanding,
           dailyCreditsResetAt: user.dailyCreditsResetAt,
         })
         .from(user)
@@ -746,7 +781,13 @@ export async function consumeDailyCreditsByUserId({
           : new Date(existingUser.dailyCreditsResetAt);
       const shouldReset = !lastReset || !isSameUtcDay(lastReset, today);
       const availableBeforeCharge = shouldReset
-        ? dailyCredits
+        ? await applyDailyCreditsReset({
+            tx,
+            userId: id,
+            dailyCredits,
+            borrowedCreditsOutstanding: existingUser.borrowedCreditsOutstanding,
+            now: today,
+          })
         : existingUser.dailyCreditsRemaining;
       let bootstrapCreditsApplied = false;
 
@@ -773,6 +814,7 @@ export async function consumeDailyCreditsByUserId({
             .update(user)
             .set({
               dailyCreditsRemaining: dailyCredits,
+              borrowedCreditsOutstanding: 0,
               dailyCreditsResetAt: today,
             })
             .where(eq(user.id, id));
@@ -784,22 +826,19 @@ export async function consumeDailyCreditsByUserId({
         bootstrapCreditsApplied
           ? dailyCredits
           : availableBeforeCharge;
+      const borrowAvailable = Math.max(
+        0,
+        maxBorrowCredits - existingUser.borrowedCreditsOutstanding
+      );
 
       if (effectiveAvailableBeforeCharge < amount) {
-        if (shouldReset) {
-          await tx
-            .update(user)
-            .set({
-              dailyCreditsRemaining: dailyCredits,
-              dailyCreditsResetAt: today,
-            })
-            .where(eq(user.id, id));
-        }
 
         return {
           allowed: false,
           remainingCredits: effectiveAvailableBeforeCharge,
           dailyCredits,
+          maxBorrowCredits,
+          borrowAvailable,
           amount,
         };
       }
@@ -819,6 +858,8 @@ export async function consumeDailyCreditsByUserId({
         remainingCredits,
         dailyCredits,
         amount,
+        maxBorrowCredits,
+        borrowAvailable,
       };
     });
   } catch (_error) {
@@ -841,12 +882,14 @@ export async function getDailyCreditsStateByUserId({
     const db = getDb();
     const today = new Date();
     const dailyCredits = getDailyCreditsByUserType(userType);
+    const maxBorrowCredits = getMaxBorrowCreditsByUserType(userType);
 
     return await db.transaction(async (tx: any) => {
       const [existingUser] = await tx
         .select({
           id: user.id,
           dailyCreditsRemaining: user.dailyCreditsRemaining,
+          borrowedCreditsOutstanding: user.borrowedCreditsOutstanding,
           dailyCreditsResetAt: user.dailyCreditsResetAt,
         })
         .from(user)
@@ -864,17 +907,20 @@ export async function getDailyCreditsStateByUserId({
       const shouldReset = !lastReset || !isSameUtcDay(lastReset, today);
 
       if (shouldReset) {
-        await tx
-          .update(user)
-          .set({
-            dailyCreditsRemaining: dailyCredits,
-            dailyCreditsResetAt: today,
-          })
-          .where(eq(user.id, id));
+        const resetRemaining = await applyDailyCreditsReset({
+          tx,
+          userId: id,
+          dailyCredits,
+          borrowedCreditsOutstanding: existingUser.borrowedCreditsOutstanding,
+          now: today,
+        });
 
         return {
-          remainingCredits: dailyCredits,
+          remainingCredits: resetRemaining,
           dailyCredits,
+          maxBorrowCredits,
+          borrowedCreditsOutstanding: 0,
+          borrowAvailable: maxBorrowCredits,
           resetAt: today,
         };
       }
@@ -900,6 +946,7 @@ export async function getDailyCreditsStateByUserId({
             .update(user)
             .set({
               dailyCreditsRemaining: dailyCredits,
+              borrowedCreditsOutstanding: 0,
               dailyCreditsResetAt: today,
             })
             .where(eq(user.id, id));
@@ -907,6 +954,9 @@ export async function getDailyCreditsStateByUserId({
           return {
             remainingCredits: dailyCredits,
             dailyCredits,
+            maxBorrowCredits,
+            borrowedCreditsOutstanding: 0,
+            borrowAvailable: maxBorrowCredits,
             resetAt: today,
           };
         }
@@ -915,6 +965,12 @@ export async function getDailyCreditsStateByUserId({
       return {
         remainingCredits: existingUser.dailyCreditsRemaining,
         dailyCredits,
+        maxBorrowCredits,
+        borrowedCreditsOutstanding: existingUser.borrowedCreditsOutstanding,
+        borrowAvailable: Math.max(
+          0,
+          maxBorrowCredits - existingUser.borrowedCreditsOutstanding
+        ),
         resetAt: lastReset,
       };
     });
@@ -923,6 +979,104 @@ export async function getDailyCreditsStateByUserId({
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to get daily credits state by user id"
+    );
+  }
+}
+
+export async function borrowCreditsFromTomorrowByUserId({
+  id,
+  userType,
+  amount,
+}: {
+  id: string;
+  userType: UserType;
+  amount: number;
+}) {
+  try {
+    const db = getDb();
+    const today = new Date();
+    const dailyCredits = getDailyCreditsByUserType(userType);
+    const maxBorrowCredits = getMaxBorrowCreditsByUserType(userType);
+    const normalizedAmount = Math.max(1, Math.floor(amount));
+
+    return await db.transaction(async (tx: any) => {
+      const [existingUser] = await tx
+        .select({
+          id: user.id,
+          dailyCreditsRemaining: user.dailyCreditsRemaining,
+          borrowedCreditsOutstanding: user.borrowedCreditsOutstanding,
+          dailyCreditsResetAt: user.dailyCreditsResetAt,
+        })
+        .from(user)
+        .where(eq(user.id, id))
+        .limit(1);
+
+      if (!existingUser) {
+        throw new ChatSDKError("not_found:chat", "User not found for borrowing credits");
+      }
+
+      const lastReset =
+        existingUser.dailyCreditsResetAt instanceof Date
+          ? existingUser.dailyCreditsResetAt
+          : new Date(existingUser.dailyCreditsResetAt);
+      const shouldReset = !lastReset || !isSameUtcDay(lastReset, today);
+
+      let currentRemaining = existingUser.dailyCreditsRemaining;
+      let currentBorrowed = existingUser.borrowedCreditsOutstanding;
+
+      if (shouldReset) {
+        currentRemaining = await applyDailyCreditsReset({
+          tx,
+          userId: id,
+          dailyCredits,
+          borrowedCreditsOutstanding: currentBorrowed,
+          now: today,
+        });
+        currentBorrowed = 0;
+      }
+
+      const borrowAvailable = Math.max(0, maxBorrowCredits - currentBorrowed);
+      const borrowAmount = Math.min(normalizedAmount, borrowAvailable);
+
+      if (borrowAmount <= 0) {
+        return {
+          allowed: false,
+          borrowedAmount: 0,
+          remainingCredits: currentRemaining,
+          borrowedCreditsOutstanding: currentBorrowed,
+          borrowAvailable: 0,
+          maxBorrowCredits,
+          dailyCredits,
+        };
+      }
+
+      const updatedRemaining = currentRemaining + borrowAmount;
+      const updatedBorrowed = currentBorrowed + borrowAmount;
+
+      await tx
+        .update(user)
+        .set({
+          dailyCreditsRemaining: updatedRemaining,
+          borrowedCreditsOutstanding: updatedBorrowed,
+          dailyCreditsResetAt: shouldReset ? today : lastReset,
+        })
+        .where(eq(user.id, id));
+
+      return {
+        allowed: true,
+        borrowedAmount: borrowAmount,
+        remainingCredits: updatedRemaining,
+        borrowedCreditsOutstanding: updatedBorrowed,
+        borrowAvailable: Math.max(0, maxBorrowCredits - updatedBorrowed),
+        maxBorrowCredits,
+        dailyCredits,
+      };
+    });
+  } catch (_error) {
+    if (_error instanceof ChatSDKError) throw _error;
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to borrow credits from tomorrow by user id"
     );
   }
 }
