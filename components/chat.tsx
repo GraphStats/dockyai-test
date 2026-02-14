@@ -138,8 +138,10 @@ export function Chat({
     },
     onFinish: () => {
       mutate(unstable_serialize(getChatHistoryPaginationKey));
+      mutate("/api/credits");
     },
     onError: (error) => {
+      mutate("/api/credits");
       if (error instanceof ChatSDKError) {
         if (
           error.message?.includes("AI Gateway requires a valid credit card")
